@@ -33,7 +33,7 @@ app.get('/', (req, res) => {
 
 // Sets up the port and starts the server
 // Establishes connection to the database
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5001;
 async function start() {
   try{
     await sequelize.authenticate()
@@ -44,7 +44,7 @@ async function start() {
     await sequelize.sync({alter: true})
     console.log('models synced')
     app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
+      console.log(`Server is running on http://localhost:${PORT}`);
     });
   } catch (error) {
     console.error('Unable to connect to the database:', error);
