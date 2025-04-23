@@ -5,12 +5,14 @@ const TransactionLine = require('../models/TransactionLine');
 const router = express.Router();
 
 // GET /api/transaction-lines
+// Fetches all transaction lines from the database in JSON
 router.get('/', async (req, res) => {
   const all = await TransactionLine.findAll();
   res.json(all);
 });
 
 // GET /api/transaction-lines/:id
+// Fetches a single transaction line by its ID
 router.get('/:id', async (req, res) => {
   const line = await TransactionLine.findByPk(req.params.id);
   if (!line) return res.status(404).json({ message: 'Not found' });
@@ -18,6 +20,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/transaction-lines
+// Creates a new transaction line based on provided fields
 router.post('/', async (req, res) => {
   try {
     const {
@@ -41,6 +44,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /api/transaction-lines/:id
+// Updates an existing transaction line by its ID with provided fields
 router.put('/:id', async (req, res) => {
   const {
     creditedAmount,
@@ -59,6 +63,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE /api/transaction-lines/:id
+// Deletes a transaction line by its ID
 router.delete('/:id', async (req, res) => {
   const deleted = await TransactionLine.destroy({
     where: { id: req.params.id }

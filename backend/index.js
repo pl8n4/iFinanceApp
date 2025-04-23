@@ -22,7 +22,6 @@ const express = require('express');
 const cors = require('cors');
 const sequelize = require('./db');
 
-
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -32,14 +31,16 @@ app.get('/', (req, res) => {
     res.send('iFinance backend is up and running!');
 });
 
-
+// Sets up the port and starts the server
+// Establishes connection to the database
 const PORT = process.env.PORT || 3000;
 async function start() {
   try{
     await sequelize.authenticate()
     console.log('db connected')
     
-    // Syncs all the models from ./models to the database
+    // Syncs all the models from ./models to the database. 
+    // If the models from the db dont match the ones in ./models, it will alter the db to match the models. 
     await sequelize.sync({alter: true})
     console.log('models synced')
     app.listen(PORT, () => {
@@ -50,7 +51,7 @@ async function start() {
   }
 }
 
-// routes 
+// These are all the routes
 app.use('/api/categories', categoryRouter);
 app.use('/api/groups', groupRouter);
 app.use('/api/master-accounts', masterAccountRouter);

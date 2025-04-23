@@ -5,12 +5,14 @@ const MasterAccount = require('../models/MasterAccount');
 const router = express.Router();
 
 // GET /api/master-accounts
+// Fetches all master accounts forom the db in JSON
 router.get('/', async (req, res) => {
   const all = await MasterAccount.findAll();
   res.json(all);
 });
 
 // GET /api/master-accounts/:id
+// Fetches a single master account by its ID
 router.get('/:id', async (req, res) => {
   const acct = await MasterAccount.findByPk(req.params.id);
   if (!acct) return res.status(404).json({ message: 'Not found' });
@@ -18,6 +20,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/master-accounts
+// Creates a new master account based on provided fields
 router.post('/', async (req, res) => {
   try {
     const { name, openingAmount, closingAmount, GroupId } = req.body;
@@ -34,6 +37,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /api/master-accounts/:id
+// Updates an existing master account by its ID with provided fields
 router.put('/:id', async (req, res) => {
   const { name, openingAmount, closingAmount, GroupId } = req.body;
   const [updated] = await MasterAccount.update(
@@ -46,6 +50,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE /api/master-accounts/:id
+// Deletes a master account by its ID.
 router.delete('/:id', async (req, res) => {
   const deleted = await MasterAccount.destroy({
     where: { id: req.params.id }

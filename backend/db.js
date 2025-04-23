@@ -1,7 +1,9 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-// Set up local .env file to connect to db
+
+// Creats a new Sequalize instance to connect to the database
+// The database connection info is stored in the .env and you need to configure it with your own login.
 const sequelize = new Sequelize(
   process.env.DB_NAME,
   process.env.DB_USER,
