@@ -1,5 +1,6 @@
 const express       = require('express');
 const { v4: uuidv4 }= require('uuid');
+const bcrypt = require('bcrypt');
 const BaseUser      = require('../models/BaseUser');
 const UserPassword  = require('../models/UserPassword');
 const NonAdminUser  = require('../models/NonAdminUser');
@@ -14,18 +15,19 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'All fields are required.' });
     }
 
-    // 1) BaseUser
+    // Creates a base user
     const id = uuidv4();
     await BaseUser.create({ id, name });
 
-    // 2) Credentials (stored in plain text here)
+    // 2) Encrypts password and stores credentials
+    const hash = await bcrypt.hash(password, 10);
     await UserPassword.create({
       id,
       userName,
-      encryptedPassword: password  // plain text!
+      encryptedPassword: hash
     });
 
-    // 3) NonAdminUser profile
+    // Creates a non-admin user
     await NonAdminUser.create({
       id,
       address,

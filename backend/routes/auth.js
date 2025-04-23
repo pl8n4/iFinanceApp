@@ -1,4 +1,5 @@
-const express       = require('express');
+const express = require('express');
+const bcrypt = require('bcrypt');
 const UserPassword  = require('../models/UserPassword');
 const NonAdminUser  = require('../models/NonAdminUser');
 const BaseUser      = require('../models/BaseUser');
@@ -6,20 +7,22 @@ const BaseUser      = require('../models/BaseUser');
 const router = express.Router();
 
 // POST /api/auth/login
+// Handles user login by validating credentials and returning user profile information
 router.post('/login', async (req, res) => {
   const { userName, password } = req.body;
+  // Check if userName and password are provided
   if (!userName || !password) {
     return res.status(400).json({ message: 'userName and password required.' });
   }
 
   try {
-    // look up credentials
+    // Checks if user exists and password matches
     const up = await UserPassword.findOne({ where: { userName } });
-    if (!up || up.encryptedPassword !== password) {
+    const valid = await bcrypt.compare(password, up.encryptedPassword);
+    if (!up || !valid) {
       return res.status(401).json({ message: 'Invalid credentials.' });
-    }
-
-    // fetch profile
+    };
+    // Fetches the user profile
     const profile = await NonAdminUser.findByPk(up.id, {
         include: [{ model: BaseUser, attributes: ['name'] }]
     });
