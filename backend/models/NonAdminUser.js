@@ -12,9 +12,9 @@ const NonAdminUser = sequelize.define('NonAdminUser', {
     type: DataTypes.STRING
   },
   email: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(255),
     allowNull: false,
-    unique: true
+    unique: 'uniq_NonAdminUsers_email'
   },
   AdministratorId: { 
     type: DataTypes.UUID,

@@ -8,9 +8,9 @@ const UserPassword = sequelize.define('UserPassword', {
     primaryKey: true
   },
   userName: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(255),
     allowNull: false,
-    unique: true
+    unique: 'uniq_UserPasswords_userName'
   },
   encryptedPassword: {
     type: DataTypes.STRING,
