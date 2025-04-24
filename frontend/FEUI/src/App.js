@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
-// Initialize default admin user if none exists
 const initializeUsers = () => {
   const users = JSON.parse(localStorage.getItem('users')) || [];
   if (!users.some(user => user.role === 'admin')) {
@@ -24,11 +23,20 @@ function App() {
   const [newUsername, setNewUsername] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [newRole, setNewRole] = useState('user');
+  const [backendUsers, setBackendUsers] = useState([]);
 
-  // Save users to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('users', JSON.stringify(users));
   }, [users]);
+
+  useEffect(() => {
+    if (currentUser?.role === 'admin') {
+      fetch('http://localhost:3001/api/users')
+        .then(res => res.json())
+        .then(data => setBackendUsers(data))
+        .catch(err => console.error('Error fetching backend users:', err));
+    }
+  }, [currentUser]);
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -115,76 +123,101 @@ function App() {
         <h1>Welcome, {currentUser.username} ({currentUser.role})</h1>
         <button onClick={handleLogout} className="logout-button">Logout</button>
       </div>
+
       {currentUser.role === 'admin' && (
-        <div className="admin-section">
-          <h2>Create New User</h2>
-          {error && <p className="error">{error}</p>}
-          <form onSubmit={handleCreateUser}>
-            <div className="form-group">
-              <label htmlFor="newUsername">Username</label>
-              <input
-                type="text"
-                id="newUsername"
-                value={newUsername}
-                onChange={(e) => setNewUsername(e.target.value)}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="newPassword">Password</label>
-              <input
-                type="password"
-                id="newPassword"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="newRole">Role</label>
-              <select
-                id="newRole"
-                value={newRole}
-                onChange={(e) => setNewRole(e.target.value)}
-              >
-                <option value="user">User</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-            <button type="submit">Create User</button>
-          </form>
-        </div>
-      )}
-      {currentUser.role === 'admin' && (
-        <div className="admin-section">
-          <h2>Manage Users</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Username</th>
-                <th>Role</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user.username}>
-                  <td>{user.username}</td>
-                  <td>{user.role}</td>
-                  <td>
-                    <button
-                      onClick={() => handleDeleteUser(user.username)}
-                      className="delete-button"
-                    >
-                      Delete
-                    </button>
-                  </td>
+        <>
+          <div className="admin-section">
+            <h2>Create New User</h2>
+            {error && <p className="error">{error}</p>}
+            <form onSubmit={handleCreateUser}>
+              <div className="form-group">
+                <label htmlFor="newUsername">Username</label>
+                <input
+                  type="text"
+                  id="newUsername"
+                  value={newUsername}
+                  onChange={(e) => setNewUsername(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="newPassword">Password</label>
+                <input
+                  type="password"
+                  id="newPassword"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="newRole">Role</label>
+                <select
+                  id="newRole"
+                  value={newRole}
+                  onChange={(e) => setNewRole(e.target.value)}
+                >
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <button type="submit">Create User</button>
+            </form>
+          </div>
+
+          <div className="admin-section">
+            <h2>Local Users</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>Username</th>
+                  <th>Role</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {users.map((user) => (
+                  <tr key={user.username}>
+                    <td>{user.username}</td>
+                    <td>{user.role}</td>
+                    <td>
+                      {user.username !== currentUser.username && (
+                        <button
+                          onClick={() => handleDeleteUser(user.username)}
+                          className="delete-button"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="admin-section">
+            <h2>Backend Users</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                </tr>
+              </thead>
+              <tbody>
+                {backendUsers.map((user) => (
+                  <tr key={user.id}>
+                    <td>{user.id}</td>
+                    <td>{user.username}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
+
       {currentUser.role === 'user' && (
         <div className="user-section">
           <h2>User Dashboard</h2>
