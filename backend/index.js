@@ -8,7 +8,6 @@ require('./models/Group');
 require('./models/MasterAccount');
 require('./models/Transaction');
 require('./models/TransactionLine');
-//require('./scripts/seedAdmin');
 
 const categoryRouter = require('./routes/accountCategory');
 const groupRouter = require('./routes/groups');
@@ -39,12 +38,10 @@ async function start() {
   try{
     await sequelize.authenticate()
     console.log('db connected')
-    
     // Syncs all the models from ./models to the database. 
     // If the models from the db dont match the ones in ./models, it will alter the db to match the models. 
     await sequelize.sync({alter: true})
     console.log('models synced')
-    //await seedDefaultAdmin();
     app.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
     });
@@ -63,4 +60,3 @@ app.use('/api/users', userRouter);
 app.use('/api/auth', authRouter)
 
 start();
-
