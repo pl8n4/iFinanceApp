@@ -1,86 +1,78 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './App.css';
 
-const initializeUsers = () => {
-  const users = JSON.parse(localStorage.getItem('users')) || [];
-  if (!users.some(user => user.role === 'admin')) {
-    users.push({
-      username: 'admin',
-      password: 'admin123',
-      role: 'admin'
-    });
-    localStorage.setItem('users', JSON.stringify(users));
-  }
-  return users;
-};
-
 function App() {
-  const [users, setUsers] = useState(initializeUsers());
+  const [token, setToken] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [newUsername, setNewUsername] = useState('');
+  const [form, setForm] = useState({ username: '', password: '' });
   const [newPassword, setNewPassword] = useState('');
-  const [newRole, setNewRole] = useState('user');
-  const [backendUsers, setBackendUsers] = useState([]);
+  const [newUser, setNewUser] = useState({
+    name: '',
+    username: '',
+    password: '1111',
+    role: 'user',
+    email: '',
+    address: ''
+  });
 
-  useEffect(() => {
-    localStorage.setItem('users', JSON.stringify(users));
-  }, [users]);
-
-  useEffect(() => {
-    if (currentUser?.role === 'admin') {
-      fetch('http://localhost:3001/api/users')
-        .then(res => res.json())
-        .then(data => setBackendUsers(data))
-        .catch(err => console.error('Error fetching backend users:', err));
-    }
-  }, [currentUser]);
-
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    const user = users.find(
-      (u) => u.username === username && u.password === password
-    );
-    if (user) {
-      setCurrentUser(user);
-      setError('');
-      setUsername('');
-      setPassword('');
-    } else {
-      setError('Invalid username or password');
+    try {
+      const res = await fetch('http://localhost:5001/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      });
+      if (!res.ok) throw new Error('Login failed');
+      const data = await res.json();
+      setToken(data.token);
+      setCurrentUser(data.user);
+    } catch (err) {
+      alert('Invalid login');
     }
   };
 
-  const handleLogout = () => {
-    setCurrentUser(null);
-  };
-
-  const handleCreateUser = (e) => {
+  const handleChangePassword = async (e) => {
     e.preventDefault();
-    if (users.some((u) => u.username === newUsername)) {
-      setError('Username already exists');
-      return;
+    try {
+      const res = await fetch('http://localhost:5001/api/auth/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          oldPassword: form.password,
+          newPassword
+        })
+      });
+      if (!res.ok) throw new Error('Password change failed');
+      alert('Password changed successfully!');
+      setForm({ username: '', password: '' });
+      setNewPassword('');
+      setCurrentUser(null);
+    } catch (err) {
+      alert('Error changing password');
     }
-    const newUser = {
-      username: newUsername,
-      password: newPassword,
-      role: newRole
-    };
-    setUsers([...users, newUser]);
-    setError('');
-    setNewUsername('');
-    setNewPassword('');
-    setNewRole('user');
   };
 
-  const handleDeleteUser = (username) => {
-    if (username === currentUser.username) {
-      setError('Cannot delete the current user');
-      return;
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('http://localhost:5001/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(newUser)
+      });
+      if (!res.ok) throw new Error('Failed to create user');
+      alert('User created successfully!');
+      setNewUser({ name: '', username: '', password: '1111', role: 'user', email: '', address: '' });
+    } catch (err) {
+      alert(err.message);
     }
-    setUsers(users.filter((u) => u.username !== username));
   };
 
   if (!currentUser) {
@@ -88,15 +80,14 @@ function App() {
       <div className="login-container">
         <div className="login-box">
           <h1>iFinanceApp Login</h1>
-          {error && <p className="error">{error}</p>}
           <form onSubmit={handleLogin}>
             <div className="form-group">
               <label htmlFor="username">Username</label>
               <input
                 type="text"
                 id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={form.username}
+                onChange={e => setForm({ ...form, username: e.target.value })}
                 required
               />
             </div>
@@ -105,8 +96,8 @@ function App() {
               <input
                 type="password"
                 id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={form.password}
+                onChange={e => setForm({ ...form, password: e.target.value })}
                 required
               />
             </div>
@@ -120,108 +111,106 @@ function App() {
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
-        <h1>Welcome, {currentUser.username} ({currentUser.role})</h1>
-        <button onClick={handleLogout} className="logout-button">Logout</button>
+        <h1>Welcome, {currentUser.name} ({currentUser.role})</h1>
+        <button onClick={() => { setCurrentUser(null); setToken(''); }} className="logout-button">Logout</button>
+      </div>
+
+      <div className="user-section">
+        <h2>Change Password</h2>
+        <form onSubmit={handleChangePassword}>
+          <div className="form-group">
+            <label htmlFor="currentPassword">Current Password</label>
+            <input
+              type="password"
+              id="currentPassword"
+              value={form.password}
+              onChange={e => setForm({ ...form, password: e.target.value })}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="newPassword">New Password</label>
+            <input
+              type="password"
+              id="newPassword"
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value)}
+              required
+            />
+          </div>
+          <button type="submit">Change Password</button>
+        </form>
       </div>
 
       {currentUser.role === 'admin' && (
-        <>
-          <div className="admin-section">
-            <h2>Create New User</h2>
-            {error && <p className="error">{error}</p>}
-            <form onSubmit={handleCreateUser}>
-              <div className="form-group">
-                <label htmlFor="newUsername">Username</label>
-                <input
-                  type="text"
-                  id="newUsername"
-                  value={newUsername}
-                  onChange={(e) => setNewUsername(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="newPassword">Password</label>
-                <input
-                  type="password"
-                  id="newPassword"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="newRole">Role</label>
-                <select
-                  id="newRole"
-                  value={newRole}
-                  onChange={(e) => setNewRole(e.target.value)}
-                >
-                  <option value="user">User</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-              <button type="submit">Create User</button>
-            </form>
-          </div>
-
-          <div className="admin-section">
-            <h2>Local Users</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th>Username</th>
-                  <th>Role</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr key={user.username}>
-                    <td>{user.username}</td>
-                    <td>{user.role}</td>
-                    <td>
-                      {user.username !== currentUser.username && (
-                        <button
-                          onClick={() => handleDeleteUser(user.username)}
-                          className="delete-button"
-                        >
-                          Delete
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="admin-section">
-            <h2>Backend Users</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Name</th>
-                </tr>
-              </thead>
-              <tbody>
-                {backendUsers.map((user) => (
-                  <tr key={user.id}>
-                    <td>{user.id}</td>
-                    <td>{user.username}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
-
-      {currentUser.role === 'user' && (
-        <div className="user-section">
-          <h2>User Dashboard</h2>
-          <p>Welcome to iFinanceApp! This is your user dashboard.</p>
+        <div className="admin-section">
+          <h2>Create New User</h2>
+          <form onSubmit={handleCreateUser}>
+            <div className="form-group">
+              <label htmlFor="newName">Name</label>
+              <input
+                type="text"
+                id="newName"
+                value={newUser.name}
+                onChange={e => setNewUser({ ...newUser, name: e.target.value })}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="newUsername">Username</label>
+              <input
+                type="text"
+                id="newUsername"
+                value={newUser.username}
+                onChange={e => setNewUser({ ...newUser, username: e.target.value })}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="newUserPassword">Password</label>
+              <input
+                type="password"
+                id="newUserPassword"
+                value={newUser.password}
+                onChange={e => setNewUser({ ...newUser, password: e.target.value })}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="newRole">Role</label>
+              <select
+                id="newRole"
+                value={newUser.role}
+                onChange={e => setNewUser({ ...newUser, role: e.target.value })}
+              >
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            {newUser.role === 'user' && (
+              <>
+                <div className="form-group">
+                  <label htmlFor="newEmail">Email</label>
+                  <input
+                    type="email"
+                    id="newEmail"
+                    value={newUser.email}
+                    onChange={e => setNewUser({ ...newUser, email: e.target.value })}
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="newAddress">Address</label>
+                  <input
+                    type="text"
+                    id="newAddress"
+                    value={newUser.address}
+                    onChange={e => setNewUser({ ...newUser, address: e.target.value })}
+                  />
+                </div>
+              </>
+            )}
+            <button type="submit">Create User</button>
+          </form>
         </div>
       )}
     </div>
