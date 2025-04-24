@@ -16,7 +16,8 @@ function requireAdmin(req, res, next) {
 
 // Create a new user (admin-only)
 exports.createUser = [requireAdmin, async (req, res, next) => {
-  try {
+    console.log('→ [CONTROLLER] createUser payload:', req.body, 'user:', req.user);
+    try {
     const { name, userName, password, role, email, address, dateHired, dateFinished } = req.body;
     if (!name || !userName || !password || !role) {
       return res.status(400).json({ message: 'name, userName, password, and role are required.' });

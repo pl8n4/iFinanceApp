@@ -23,37 +23,6 @@ app.use(bodyParser.json());
 app.post('/api/auth/login', authController.login);
 app.post('/api/auth/change-password', authMiddleware.verifyToken, authController.changePassword);
 
-// Admin creates users (admin or non-admin)
-app.post('/api/users', async (req, res) => {
-  const { name, username, password, role, email, address } = req.body;
-
-  if (!name || !username || !password || !role) {
-    return res.status(400).json({ message: 'Missing required fields.' });
-  }
-
-  try {
-    const existing = await UserPassword.findOne({ where: { userName: username } });
-    if (existing) return res.status(409).json({ message: 'Username already exists' });
-
-    const id = uuidv4();
-    const passwordHash = await bcrypt.hash(password, 10);
-
-    await BaseUser.create({ id, name });
-    await UserPassword.create({ id, userName: username, encryptedPassword: passwordHash });
-
-    if (role === 'admin') {
-      await Administrator.create({ id, dateHired: new Date() });
-    } else {
-      await NonAdminUser.create({ id, email: email || '', address: address || '' });
-    }
-
-    res.status(201).json({ message: 'User created successfully' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Failed to create user' });
-  }
-});
-
 // Create default admin
 async function createDefaultAdmin() {
   const existing = await UserPassword.findOne({ where: { userName: 'admin' } });
@@ -73,7 +42,7 @@ sequelize.sync().then(() => {
   createDefaultAdmin();
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

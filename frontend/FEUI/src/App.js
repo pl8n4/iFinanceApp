@@ -8,17 +8,17 @@ function App() {
   const [newPassword, setNewPassword] = useState('');
   const [newUser, setNewUser] = useState({
     name: '',
-    username: '',
+    userName: '',
     password: '1111',
-    role: 'user',
+    role: 'non-admin',       // <-- must match your controller  
     email: '',
     address: ''
   });
-
+  
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:5001/api/auth/login', {
+      const res = await fetch('/api/auth/login', { // used relative path so that 'setupProxy.js' takes over instead of hardcoding
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)
@@ -35,7 +35,7 @@ function App() {
   const handleChangePassword = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:5001/api/auth/change-password', {
+      const res = await fetch('/api/auth/change-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -59,17 +59,31 @@ function App() {
   const handleCreateUser = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:5001/api/users', {
+      const res = await fetch('/api/users', { // used relative path so that 'setupProxy.js' takes over instead of hardcoding
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(newUser)
+        body: JSON.stringify({
+          name:     newUser.name,
+          userName: newUser.userName,
+          password: newUser.password,
+          role:     newUser.role,
+          email:    newUser.email,
+          address:  newUser.address
+        })
       });
       if (!res.ok) throw new Error('Failed to create user');
       alert('User created successfully!');
-      setNewUser({ name: '', username: '', password: '1111', role: 'user', email: '', address: '' });
+      setNewUser({ 
+        name: '', 
+        userName: '', 
+        password: '1111', 
+        role: 'user', 
+        email: '', 
+        address: '' 
+      });
     } catch (err) {
       alert(err.message);
     }
@@ -161,8 +175,8 @@ function App() {
               <input
                 type="text"
                 id="newUsername"
-                value={newUser.username}
-                onChange={e => setNewUser({ ...newUser, username: e.target.value })}
+                value={newUser.userName}
+                onChange={e => setNewUser({ ...newUser, userName: e.target.value })}
                 required
               />
             </div>
@@ -183,11 +197,11 @@ function App() {
                 value={newUser.role}
                 onChange={e => setNewUser({ ...newUser, role: e.target.value })}
               >
-                <option value="user">User</option>
+                <option value="non-admin">User</option>
                 <option value="admin">Admin</option>
               </select>
             </div>
-            {newUser.role === 'user' && (
+            {newUser.role === 'non-admin' && (
               <>
                 <div className="form-group">
                   <label htmlFor="newEmail">Email</label>
