@@ -9,11 +9,11 @@ const NonAdminUser = require('../models/NonAdminUser');
 const SALT_ROUNDS = 10;
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// Still to be implemented: change-password
+// Here we handle all the authentication related tasks for login and password change
 
 /**
  * POST /api/auth/login
- * { username, password } → { token, user: { id, username, name, email, role } }
+ * { username, password } -> { token, user: { id, username, name, email, role } }
  */
 
 // Input validation
@@ -49,7 +49,7 @@ exports.login = async (req, res, next) => {
 
     // 4) Creates a token
     const payload = { id: user.id, role: user.role };
-    const token   = jwt.sign(payload, JWT_SECRET, { expiresIn: '2h' });
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '2h' });
 
     // 5) Return token + minimal user info
     res.json({
@@ -57,12 +57,46 @@ exports.login = async (req, res, next) => {
       user: {
         id: user.id,
         username: user.userName,
-        name:     user.name,
-        email:    user.nonAdminProfile?.email,
-        role:     user.role
+        name: user.name,
+        email: user.nonAdminProfile?.email,
+        role: user.role
       }
     });
   } catch (err) {
     next(err);
   }
 };
+
+// POST /api/auth/change-password
+// Body: { oldPassword, newPassword }
+exports.changePassword = async (req, res, next) => {
+    try {
+      const userId = req.user.id;          // set by authMiddleware
+      const { oldPassword, newPassword } = req.body;
+      if (!oldPassword || !newPassword) {
+        return res.status(400).json({ message: 'Old and new passwords required.' });
+      }
+  
+      // 1) Fetch the existing password record
+      const pwRec = await UserPassword.findByPk(userId);
+      if (!pwRec) {
+        return res.status(404).json({ message: 'User not found.' });
+      }
+  
+      // 2) Verify the old password
+      const match = await bcrypt.compare(oldPassword, pwRec.encryptedPassword);
+      if (!match) {
+        return res.status(400).json({ message: 'Old password is incorrect.' });
+      }
+  
+      // 3) Hash & save the new password
+      const hash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+      pwRec.encryptedPassword = hash;
+      await pwRec.save();
+  
+      // 4) Respond with no content
+      res.sendStatus(204);
+    } catch (err) {
+      next(err);
+    }
+  };
