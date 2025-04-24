@@ -14,7 +14,7 @@ const groupRouter = require('./routes/groups');
 const masterAccountRouter = require('./routes/masterAccount');
 const transactionRouter = require('./routes/transaction');
 const transactionLineRouter = require('./routes/transactionLine');
-const NonAdminUserRouter = require('./routes/nonAdminUser');
+const userRouter = require('./routes/users');
 const authRouter = require('./routes/auth');
 
 require('dotenv').config();
@@ -57,7 +57,7 @@ app.use('/api/groups', groupRouter);
 app.use('/api/master-accounts', masterAccountRouter);
 app.use('/api/transactions', transactionRouter);
 app.use('/api/transaction-lines', transactionLineRouter);
-app.use('/api/non-admin-users', NonAdminUserRouter);
+app.use('/api/users', userRouter);
 app.use('/api/auth', authRouter)
 
 start()
