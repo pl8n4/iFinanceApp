@@ -1,50 +1,54 @@
 import React, { useEffect, useState } from 'react';
 
-function GroupManager({ token }) {
-    const [groups, setGroups] = useState([]);
-    const [categories, setCategories] = useState([]);
-    const [form, setForm] = useState({ name: '', AccountCategoryId: '', parentId: '' });
-    const [editingId, setEditingId] = useState(null);
-    const [error, setError] = useState('');
+function GroupManager({ token, currentUser }) {
+  const [groups, setGroups] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [form, setForm] = useState({ name: '', AccountCategoryId: '', parentId: '' });
+  const [editingId, setEditingId] = useState(null);
+  const [error, setError] = useState('');
 
-    const fetchGroups = async () => {
-      try {
-        const res = await fetch('http://localhost:5001/api/groups', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!res.ok) {
-          const errorText = await res.text();
-          throw new Error(`Failed to fetch groups: ${res.status} ${errorText}`);
-        }
-        const data = await res.json();
-        if (Array.isArray(data)) setGroups(data);
-      } catch (err) {
-        setError('Failed to fetch groups');
-        console.error('Error fetching groups:', err);
+  const fetchGroups = async () => {
+    try {
+      const res = await fetch('http://localhost:5001/api/groups', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Failed to fetch groups: ${res.status} ${errorText}`);
       }
-    };
-
-    const fetchCategories = async () => {
-      try {
-        const res = await fetch('http://localhost:5001/api/categories');
-        if (!res.ok) {
-          const errorText = await res.text();
-          throw new Error(`Failed to fetch categories: ${res.status} ${errorText}`);
-        }
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          setCategories(data);
-        } else {
-          setError('No account categories found');
-        }
-      } catch (err) {
-        setError('Failed to fetch categories');
-        console.error('Error fetching categories:', err);
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setGroups(data);
+      } else {
+        setError('Unexpected response format');
       }
-    
+    } catch (err) {
+      setError(err.message || 'Failed to fetch groups');
+      console.error('Error fetching groups:', err);
+    }
   };
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch('http://localhost:5001/api/categories', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Failed to fetch categories: ${res.status} ${errorText}`);
+      }
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setCategories(data);
+      } else {
+        setError('No account categories found');
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to fetch categories');
+      console.error('Error fetching categories:', err);
+    }
+  };
+
   useEffect(() => {
     fetchGroups();
     fetchCategories();
@@ -111,7 +115,7 @@ function GroupManager({ token }) {
 
   return (
     <div className="user-section">
-      <h2>Manage Account Groups</h2>
+      <h2>Manage Account Groups for {currentUser?.name || 'User'}</h2>
       {error && <p className="error">{error}</p>}
       <form onSubmit={handleSubmit}>
         <div className="form-group">

@@ -1,21 +1,20 @@
 const express = require('express');
 const { verifyToken } = require('../middleware/authMiddleware');
-const controller = require('../controllers/accountCategoryController');
+const ctrl = require('../controllers/accountcategoryController');
 const router = express.Router();
 
 // Protect all category routes
 router.use(verifyToken);
 
 // GET /api/categories
-router.get('/', controller.getAll);
+router.get('/', ctrl.getAll);
 // GET /api/categories/:id
-router.get('/:id', controller.getById);
+router.get('/:id', ctrl.getById);
 // POST /api/categories
-router.post('/', controller.create);
+router.post('/', ctrl.create);
 // PUT /api/categories/:id
-router.put('/:id', controller.update);
+router.put('/:id', ctrl.update);
 // DELETE /api/categories/:id
-router.delete('/:id', controller.remove);
+router.delete('/:id', ctrl.remove);
 
 module.exports = router;
-

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import './App.css';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import GroupManager from './GroupManager';
-import GenerateReports from './GenerateReports'; // Make sure this file exists
+import GenerateReports from './GenerateReports';
 
 function App() {
   const [token, setToken] = useState('');
@@ -13,11 +13,10 @@ function App() {
     name: '',
     userName: '',
     password: '1111',
-    role: 'non-admin',
+    role: 'user',
     email: '',
     address: ''
   });
-  const [tab, setTab] = useState(null);
 
   const navigate = useNavigate();
 
@@ -64,7 +63,6 @@ function App() {
 
   const handleCreateUser = async (e) => {
     e.preventDefault();
-    
     try {
       const res = await fetch('/api/users', {
         method: 'POST',
@@ -79,7 +77,7 @@ function App() {
         throw new Error(err.message || 'Failed to create user');
       }
       alert('User created successfully!');
-      setNewUser({ name: '', userName: '', password: '1111', role: 'non-admin', email: '', address: '' });
+      setNewUser({ name: '', userName: '', password: '1111', role: 'user', email: '', address: '' });
     } catch (err) {
       alert(err.message);
     }
@@ -202,11 +200,11 @@ function App() {
                         value={newUser.role}
                         onChange={e => setNewUser({ ...newUser, role: e.target.value })}
                       >
-                        <option value="non-admin">User</option>
+                        <option value="user">User</option>
                         <option value="admin">Admin</option>
                       </select>
                     </div>
-                    {newUser.role === 'non-admin' && (
+                    {newUser.role === 'user' && (
                       <>
                         <div className="form-group">
                           <label htmlFor="newEmail">Email</label>
@@ -239,14 +237,13 @@ function App() {
                     <button onClick={() => navigate('/groupmanager')}>Manage Groups</button>
                     <button onClick={() => navigate('/generatereports')}>Generate Reports</button>
                   </div>
-                  {tab === 'groups' && <GroupManager token={token} />}
                 </>
               )}
             </div>
           )
         }
       />
-      <Route path="/groupmanager" element={<GroupManager token={token} />} />
+      <Route path="/groupmanager" element={<GroupManager token={token} currentUser={currentUser} />} />
       <Route path="/generatereports" element={<GenerateReports />} />
     </Routes>
   );

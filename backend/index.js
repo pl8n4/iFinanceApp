@@ -1,13 +1,12 @@
-// Models
-require('./models/BaseUser');
-require('./models/UserPassword');
-require('./models/Administrator');
-require('./models/NonAdminUser');
-require('./models/AccountCategory');
-require('./models/Group');
-require('./models/MasterAccount');
-require('./models/Transaction');
-require('./models/TransactionLine');
+const BaseUser = require('./models/BaseUser');
+const UserPassword = require('./models/UserPassword');
+const Administrator = require('./models/Administrator');
+const NonAdminUser = require('./models/NonAdminUser');
+const AccountCategory = require('./models/AccountCategory');
+const Group = require('./models/Group');
+const MasterAccount = require('./models/MasterAccount');
+const Transaction = require('./models/Transaction');
+const TransactionLine = require('./models/TransactionLine');
 
 const categoryRouter = require('./routes/accountCategory');
 const groupRouter = require('./routes/groups');
@@ -26,7 +25,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:3000', // Restrict to frontend origin
+  origin: 'http://localhost:3000',
   credentials: true
 }));
 app.use(express.json());
@@ -66,14 +65,5 @@ async function start() {
     console.error('Unable to connect to the database:', error);
   }
 }
-
-// These are all the routes
-app.use('/api/categories', categoryRouter);
-app.use('/api/groups', groupRouter);
-app.use('/api/master-accounts', masterAccountRouter);
-app.use('/api/transactions', transactionRouter);
-// app.use('/api/transaction-lines', transactionLineRouter);
-app.use('/api/users', userRouter);
-app.use('/api/auth', authRouter)
 
 start();
