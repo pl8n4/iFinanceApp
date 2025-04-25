@@ -3,32 +3,43 @@ import { useNavigate } from 'react-router-dom';
 
 function MasterAccountManager({ token, currentUser }) {
   const [accounts, setAccounts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [groups, setGroups] = useState([]);
   const [form, setForm] = useState({ name: '', openingAmount: '', closingAmount: '', GroupId: '' });
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState('');
   const [history, setHistory] = useState([]);
   const [selected, setSelected] = useState(null);
+
+  // Fetch categories
+  useEffect(() => {
+    if (!token) return;
+    fetch('http://localhost:5001/api/categories', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(r => r.json())
+      .then(setCategories)
+      .catch(console.error);
+  }, [token]);
   const navigate = useNavigate();
 
   // Fetch all lines for one account (with its parent Transaction)
-const fetchHistory = async acctId => {
-  setSelected(acctId);
-  try {
-    const res = await fetch(
-    `http://localhost:5001/api/master-accounts/${acctId}/transactions`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    if (!res.ok) throw new Error('Couldn’t load history');
-     const lines = await res.json();
+  const fetchHistory = async acctId => {
+    setSelected(acctId);
+    try {
+      const res = await fetch(
+        `http://localhost:5001/api/master-accounts/${acctId}/transactions`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (!res.ok) throw new Error('Couldn’t load history');
+      const lines = await res.json();
       setHistory(lines);
-  } catch (err) {
-    setError(err.message);
-    console.error('Error loading history:', err);
+    } catch (err) {
+      setError(err.message);
+      console.error('Error loading history:', err);
     }
   };
-  
-  
+
   const fetchAccounts = async () => {
     try {
       const res = await fetch('http://localhost:5001/api/master-accounts', {
@@ -72,15 +83,18 @@ const fetchHistory = async acctId => {
   };
 
   useEffect(() => {
+    if (!token) return;
     fetchAccounts();
     fetchGroups();
   }, [token]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     setError('');
     const method = editingId ? 'PUT' : 'POST';
-    const url = editingId ? `http://localhost:5001/api/master-accounts/${editingId}` : 'http://localhost:5001/api/master-accounts';
+    const url = editingId
+      ? `http://localhost:5001/api/master-accounts/${editingId}`
+      : 'http://localhost:5001/api/master-accounts';
     try {
       const res = await fetch(url, {
         method,
@@ -108,7 +122,7 @@ const fetchHistory = async acctId => {
     }
   };
 
-  const handleEdit = (account) => {
+  const handleEdit = account => {
     setForm({
       name: account.name,
       openingAmount: account.openingAmount.toString(),
@@ -119,7 +133,7 @@ const fetchHistory = async acctId => {
     setError('');
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async id => {
     setError('');
     try {
       const res = await fetch(`http://localhost:5001/api/master-accounts/${id}`, {
@@ -144,9 +158,12 @@ const fetchHistory = async acctId => {
   return (
     <>
       <div className="user-section">
+      <div className="tabs">
+        <button onClick={handleGoBack}>Go Back</button>
+      </div>
         <h2>Manage Master Accounts for {currentUser?.name || 'User'}</h2>
         {error && <p className="error">{error}</p>}
-  
+
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="accountName">Account Name</label>
@@ -200,7 +217,7 @@ const fetchHistory = async acctId => {
             {editingId ? 'Update Account' : 'Add Account'}
           </button>
         </form>
-  
+
         <table>
           <thead>
             <tr>
@@ -219,35 +236,36 @@ const fetchHistory = async acctId => {
                 <td>{account.id}</td>
                 <td>{account.name}</td>
                 <td>{account.openingAmount.toFixed(2)}</td>
-                <td>{account.closingAmount.toFixed(2)}</td>
+                <td>
+                  {(() => {
+                    const cat = categories.find(
+                      c => c.id === account.accountGroup.AccountCategoryId
+                    );
+                    const bal = account.closingAmount || 0;
+                    const display = Math.abs(bal).toFixed(2);
+                    return cat?.type === 'Credit'
+                      ? `${display} Cr`
+                      : `${display} Dr`;
+                  })()}
+                </td>
                 <td>
                   {groups.find(g => g.id === account.GroupId)?.name || 'N/A'}
                 </td>
                 <td>
-                  <button onClick={() => handleEdit(account)}>Edit</button>
-                  <button onClick={() => handleDelete(account.id)}>
-                    Delete
-                  </button>
+                  <button onClick={() => handleEdit(account)}>Edit</button>{' '}
+                  <button onClick={() => handleDelete(account.id)}>Delete</button>
                 </td>
                 <td>
-                  <button onClick={() => fetchHistory(account.id)}>
-                    View History
-                  </button>
+                  <button onClick={() => fetchHistory(account.id)}>View History</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <div className="tabs">
-        <button onClick={handleGoBack}>Go Back</button>
-      </div>
       {selected && (
         <div className="history-panel">
-          <h3>
-            Transactions for{' '}
-            {accounts.find(a => a.id === selected)?.name || '—'}
-          </h3>
+          <h3>Transactions for {accounts.find(a => a.id === selected)?.name || '—'}</h3>
           <table className="history-table">
             <thead>
               <tr>
@@ -260,9 +278,7 @@ const fetchHistory = async acctId => {
             <tbody>
               {history.map(line => (
                 <tr key={line.id}>
-                  <td>
-                    {new Date(line.Transaction.date).toLocaleDateString()}
-                  </td>
+                  <td>{new Date(line.Transaction.date).toLocaleDateString()}</td>
                   <td>{line.Transaction.description}</td>
                   <td>{line.debitedAmount}</td>
                   <td>{line.creditedAmount}</td>

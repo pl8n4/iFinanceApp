@@ -122,6 +122,9 @@ function GroupManager({ token, currentUser }) {
 
   return (
     <div className="user-section">
+      <div className="tabs">
+        <button onClick={handleGoBack}>Go Back</button>
+      </div>
       <h2>Manage Account Groups for {currentUser?.name || 'User'}</h2>
       {error && <p className="error">{error}</p>}
       <form onSubmit={handleSubmit}>
@@ -210,9 +213,6 @@ function GroupManager({ token, currentUser }) {
           ))}
         </tbody>
       </table>
-      <div className="tabs">
-          <button onClick={handleGoBack}>Go Back</button>
-      </div>
     </div>
   );
 }
