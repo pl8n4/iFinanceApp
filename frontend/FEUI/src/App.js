@@ -3,6 +3,7 @@ import './App.css';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import GroupManager from './GroupManager';
 import GenerateReports from './GenerateReports';
+import UserManagement from './UserManagement';
 
 function App() {
   const [token, setToken] = useState('');
@@ -60,7 +61,7 @@ function App() {
       alert('Error changing password');
     }
   };
-
+  
   const handleCreateUser = async (e) => {
     e.preventDefault();
     try {
@@ -89,6 +90,7 @@ function App() {
         path="/"
         element={
           !currentUser ? (
+            // ... (login form remains the same)
             <div className="login-container">
               <div className="login-box">
                 <h1>iFinanceApp Login</h1>
@@ -163,6 +165,7 @@ function App() {
                 <div className="admin-section">
                   <h2>Create New User</h2>
                   <form onSubmit={handleCreateUser}>
+                    {/* ... (rest of the create user form remains the same) */}
                     <div className="form-group">
                       <label htmlFor="newName">Name</label>
                       <input
@@ -228,6 +231,10 @@ function App() {
                     )}
                     <button type="submit">Create User</button>
                   </form>
+                  {/* <mark> START: Link to User Management page </mark> */}
+                  <h2>User Administration</h2>
+                  <button onClick={() => navigate('/users')}>Manage Existing Users</button>
+                  {/* <mark> END: Link to User Management page </mark> */}
                 </div>
               )}
 
@@ -245,6 +252,9 @@ function App() {
       />
       <Route path="/groupmanager" element={<GroupManager token={token} currentUser={currentUser} />} />
       <Route path="/generatereports" element={<GenerateReports />} />
+      {/* <mark> START: New route for User Management </mark> */}
+      <Route path="/users" element={<UserManagement token={token} />} />
+      {/* <mark> END: New route for User Management </mark> */}
     </Routes>
   );
 }

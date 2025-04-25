@@ -8,6 +8,33 @@ const sequelize = require('../db');
 const { verifyToken } = require('../middleware/authMiddleware');
 const bcrypt = require('bcryptjs');
 
+// Helper to enforce admin-only actions
+function requireAdmin(req, res, next) {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Admin access required' });
+  }
+  next();
+}
+
+// GET /api/users - Retrieve all users (admin only)
+router.get('/', verifyToken, requireAdmin, async (req, res, next) => {
+  try {
+    const users = await BaseUser.findAll({
+      include: [
+        { model: UserPassword, as: 'shadow', attributes: ['userName'] },
+        { model: NonAdminUser, as: 'userProfile', attributes: ['email', 'address'] },
+        { model: Administrator, as: 'adminProfile', attributes: ['dateHired', 'dateFinished'] }
+      ],
+      attributes: ['id', 'name', 'role']
+    });
+    res.json(users);
+  } catch (err) {
+    console.error('Error fetching all users:', err);
+    res.status(500).json({ message: 'Failed to fetch users' });
+    next(err);
+  }
+});
+
 // Create a new user (admin only)
 router.post('/', verifyToken, async (req, res) => {
   if (req.user.role !== 'admin') {
@@ -76,6 +103,43 @@ router.post('/', verifyToken, async (req, res) => {
     await transaction.rollback();
     console.error('Error creating user:', err);
     res.status(400).json({ message: err.message || 'Failed to create user' });
+  }
+});
+
+// <mark> Define PUT route for updating a user (admin only) </mark>
+router.put('/:id', verifyToken, requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { name } = req.body;
+
+  try {
+    const user = await BaseUser.findByPk(id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    await user.update({ name });
+    res.json({ message: 'User updated successfully' });
+  } catch (err) {
+    console.error('Error updating user:', err);
+    res.status(500).json({ message: 'Failed to update user' });
+  }
+});
+
+// <mark> Define DELETE route for deleting a user (admin only) </mark>
+router.delete('/:id', verifyToken, requireAdmin, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const user = await BaseUser.findByPk(id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    await user.destroy();
+    res.json({ message: 'User deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting user:', err);
+    res.status(500).json({ message: 'Failed to delete user' });
   }
 });
 

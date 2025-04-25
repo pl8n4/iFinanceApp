@@ -14,6 +14,8 @@ const BaseUser = require('./models/BaseUser');
 const UserPassword = require('./models/UserPassword');
 const Administrator = require('./models/Administrator');
 const NonAdminUser = require('./models/NonAdminUser');
+const userRoutes = require('./routes/userRoutes');
+
 
 const app = express();
 app.use(cors());
@@ -22,6 +24,7 @@ app.use(bodyParser.json());
 // Routes
 app.post('/api/auth/login', authController.login);
 app.post('/api/auth/change-password', authMiddleware.verifyToken, authController.changePassword);
+app.use('/api/users', userRoutes);
 
 // Create default admin
 async function createDefaultAdmin() {
