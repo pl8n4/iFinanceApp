@@ -1,11 +1,16 @@
+//This page mainly handles password changes and requires a user to give the old password and the new password to 
+//update in the system.
+
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom'; //for navigation of pages
 
 function ChangePassword({ token, currentUser, setCurrentUser }) {
   const [newPassword, setNewPassword] = useState('');
   const [form, setForm] = useState({ password: '' }); // Removed username as it's not used here
-  const navigate = useNavigate();
+  const navigate = useNavigate(); //handles navigation requests
 
+  //this handles the token passing with changing passwords and send that information to the back end
+  //where the information will be changed
   const handleChangePassword = async (e) => {
     e.preventDefault();
     try {
@@ -29,11 +34,13 @@ function ChangePassword({ token, currentUser, setCurrentUser }) {
       alert('Error changing password');
     }
   };
-
+  
+  //function to handle the submission request to go to the home page
   const handleGoBack = () => {
-    navigate('/'); // Adjust the route as needed
+    navigate('/');
   };
 
+  //space to be rendered in the browser
   return (
     <div className="user-section">
       <h2>Change Password</h2>
