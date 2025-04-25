@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom'; //for navigation of pages
+
 
 function UserManagement({ token }) {
   const [users, setUsers] = useState([]);
@@ -6,6 +8,7 @@ function UserManagement({ token }) {
   const [editFormData, setEditFormData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate(); //handles navigation requests
 
   // <mark> START: Wrap fetchUsers in useCallback </mark>
   const fetchUsers = useCallback(async () => {
@@ -141,6 +144,11 @@ function UserManagement({ token }) {
     return <p>Error loading users: {error}</p>;
   }
 
+    //function to handle the submission request to go to the home page
+    const handleGoBack = () => {
+      navigate('/');
+    };
+
   return (
     <div className="user-management-container">
       <h2>Manage Users</h2>
@@ -191,6 +199,9 @@ function UserManagement({ token }) {
       ) : (
         <p>No users found.</p>
       )}
+      <div className="tabs">
+        <button onClick={handleGoBack}>Go Back</button>
+      </div>
     </div>
   );
 }

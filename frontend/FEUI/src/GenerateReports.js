@@ -2,8 +2,11 @@ import React, { useState } from 'react';
 import './report.css';
 import jsPDF from 'jspdf';
 import { autoTable } from 'jspdf-autotable'; // Import autoTable as a standalone function
+import { useNavigate } from 'react-router-dom'; //for navigation of pages
 
 function GenerateReports({ token }) {
+
+  const navigate = useNavigate(); //handles navigation requests
   // State for two reports
   const [report1, setReport1] = useState({
     reportType: '',
@@ -208,6 +211,11 @@ function GenerateReports({ token }) {
     doc.save(`${reportType.replace(/\s+/g, '-')}-Report.pdf`);
   };
 
+    //function to handle the submission request to go to the home page
+    const handleGoBack = () => {
+      navigate('/');
+    };
+
   // Generic render function for report form and results
   const renderReportSection = (reportNum) => {
     const report = reportNum === 1 ? report1 : report2;
@@ -215,7 +223,9 @@ function GenerateReports({ token }) {
     const handleFormSubmit = (e) => handleSubmit(reportNum, e);
 
     return (
+      
       <div className="report-section">
+
         <h2>{`Generate Report ${reportNum}`}</h2>
         <form onSubmit={handleFormSubmit}>
           <div>
@@ -302,7 +312,7 @@ function GenerateReports({ token }) {
             {report.loading ? 'Generating...' : 'Generate Report'}
           </button>
         </form>
-
+        
         {report.errorMessage && <p style={{ color: 'red' }}>Error: {report.errorMessage}</p>}
 
         {report.reportData && (
@@ -510,14 +520,19 @@ function GenerateReports({ token }) {
             </button>
           </div>
         )}
+
       </div>
     );
+
   };
 
   return (
     <div className="reports-container">
       {renderReportSection(1)}
       {renderReportSection(2)}
+      <div className="tabs">
+        <button onClick={handleGoBack}>Go Back</button>
+      </div>
     </div>
   );
 }
