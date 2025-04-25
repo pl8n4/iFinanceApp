@@ -4,19 +4,19 @@ You will need to download node.js and mySql workbench for this project to run
 For node.js make sure you add it to your path, for Mac: /usr/local/bin
 VSCode will also be used for this project
 
-In mySQL workbench, connect to your local instance and paste these lines and run them:
+In mySQL workbench, connect to your local instance, paste these lines and run them:
 CREATE DATABASE Group4_iFINANCEDB;
 USE Group4_iFINANCEDB;
 
-Open the IFinanceApp project back up and from a terminal in VSCode cd into iFinanceApp(If on windows make sure to you use command propt an not powershell)
+Open the IFinanceApp project VSCode and from a terminal in VSCode cd into iFinanceApp(If on windows make sure to you use command propt and not powershell)
 
-Once in the IFinanceApp in the terminal run: npm install
-Then cd from the IFinanceApp into the backend adn run: npm install 
+Once in the IFinanceApp direcory, in the terminal run: npm install
+Then cd from the IFinanceApp into the backend and run: npm install 
 Then cd from the IFinanceApp into the frontend/FEUI and run: npm install
 Also in the frontend/FEUI run: npm install react-scripts
 Note: the front end/backend may display vulnerabilities, but it should be ok to proceed regardless
 
-In the project editor window look for a .env file in the backend directory, if there is not one create a file under backend called .env and paste the following into it, be sure to replace DB_USER = “your mySQL root name” as well as DB_PASS = “your mySQL password” with your SQL server info:
+In the project editor window in VSCode look for a .env file in the backend directory, if there is not one create a file under backend called .env and paste the following into it, be sure to replace DB_USER = “your mySQL root name” as well as DB_PASS = “your mySQL password” with your SQL server info:
 
 PORT=5001 
 DB_DIALECT=mysql 
@@ -28,9 +28,11 @@ DB_PASS=7777
 JWT_SECRET=supersecretkey 
 SALT_ROUNDS=10
 
-You will need to seed some initial data into the database as well before you start, open your backed terminal and run these commands:
+You will need to seed some initial data into the database as well before you start, open your backend terminal and run these commands:
 node scripts/seedAdmin.js
-npm run seed:categorieswhen logging in for the first time the credentials are
+npm run seed:categories
+
+When logging into the iFinance application for the first time the credentials are
 Username:admin
 Password:admin
 
@@ -38,5 +40,5 @@ Finally in the the backend run the command: npm run dev
 And in the frontend/FEUI run the command: npm start
 Note: there is a chance that you may need to install other package(s), if so they should display in the terminal
 
-mayvbe:
+maybe:
 npm install jspdf jspdf-autotable in frontend/feui
