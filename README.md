@@ -2,17 +2,22 @@
 To start download the zip file and unzip to where you want it
 You will need to download node.js and mySql workbench for this project to run
 For node.js make sure you add it to your path, for Mac: /usr/local/bin
+VSCode will also be used for this project
 
 In mySQL workbench, connect to your local instance and paste these lines and run them:
 CREATE DATABASE Group4_iFINANCEDB;
 USE Group4_iFINANCEDB;
 
-Open the IFinanceApp project back up and from a terminal cd into iFinanceApp
-Once in the IFinanceApp in the terminal run: npm install
-Create two more terminals and repeat. These new terminals should have one cd from the IFinanceApp into the backend and the other to the frontend/FEUI and run npm install on both
-Note: the front end/backend may display an error/warning, but it should be ok to proceed regardless
+Open the IFinanceApp project back up and from a terminal in VSCode cd into iFinanceApp(If on windows make sure to you use command propt an not powershell)
 
-In the project editor window look for a .env file in the backend directory, if there is not one create a file under backend called .env and paste the following into it, be sure to replace DB_USER = “your mySQL root name” as well as DB_PASS = “your mySQL password”:
+Once in the IFinanceApp in the terminal run: npm install
+Then cd from the IFinanceApp into the backend adn run: npm install 
+Then cd from the IFinanceApp into the frontend/FEUI and run: npm install
+Also in the frontend/FEUI run: npm install react-scripts
+Note: the front end/backend may display vulnerabilities, but it should be ok to proceed regardless
+
+In the project editor window look for a .env file in the backend directory, if there is not one create a file under backend called .env and paste the following into it, be sure to replace DB_USER = “your mySQL root name” as well as DB_PASS = “your mySQL password” with your SQL server info:
+
 PORT=5001 
 DB_DIALECT=mysql 
 DB_HOST=127.0.0.1 
@@ -32,3 +37,6 @@ Password:admin
 Finally in the the backend run the command: npm run dev
 And in the frontend/FEUI run the command: npm start
 Note: there is a chance that you may need to install other package(s), if so they should display in the terminal
+
+mayvbe:
+npm install jspdf jspdf-autotable in frontend/feui

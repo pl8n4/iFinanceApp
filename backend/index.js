@@ -15,6 +15,7 @@ const transactionRouter = require('./routes/transaction');
 const transactionLineRouter = require('./routes/transactionLine');
 const userRouter = require('./routes/users');
 const authRouter = require('./routes/auth');
+const reportRouter = require('./routes/report'); // Add this line to require the report route
 
 require('dotenv').config();
 const express = require('express');
@@ -43,6 +44,7 @@ app.use('/api/transactions', transactionRouter);
 app.use('/api/transaction-lines', transactionLineRouter);
 app.use('/api/users', userRouter);
 app.use('/api/auth', authRouter);
+app.use('/api', reportRouter); // Add this line to mount the report route
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -8,7 +8,6 @@ import MasterAccountManager from './MasterAccountManager';
 import TransactionManager from './TransactionManager';
 import ChangePassword from './passchange';
 
-
 function App() {
   const [token, setToken] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
@@ -27,7 +26,7 @@ function App() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:5001/api/auth/login', { // Updated URL to match backend port
+      const res = await fetch('http://localhost:5001/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)
@@ -41,7 +40,6 @@ function App() {
     }
   };
 
-  
   const handleCreateUser = async (e) => {
     e.preventDefault();
     try {
@@ -204,10 +202,10 @@ function App() {
       />
       <Route path="/groupmanager" element={<GroupManager token={token} currentUser={currentUser} />} />
       <Route path="/chartofaccounts" element={<MasterAccountManager token={token} currentUser={currentUser} />} />
-      <Route path="/generatereports" element={<GenerateReports />} />
+      <Route path="/generatereports" element={<GenerateReports token={token} />} />
       <Route path="/users" element={<UserManagement token={token} />} />
-      <Route path="/transactions" element={<TransactionManager token={token} currentUser={currentUser}/>}/>
-      <Route path="/passchange" element={<ChangePassword token={token} currentUser={currentUser} setCurrentUser={setCurrentUser} />}/>
+      <Route path="/transactions" element={<TransactionManager token={token} currentUser={currentUser}/>} />
+      <Route path="/passchange" element={<ChangePassword token={token} currentUser={currentUser} setCurrentUser={setCurrentUser} />} />
     </Routes>
   );
 }
