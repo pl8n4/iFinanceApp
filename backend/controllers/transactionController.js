@@ -1,7 +1,7 @@
-const { Sequelize }       = require('sequelize');
-const sequelize           = require('../db');
-const Transaction         = require('../models/Transaction');
-const TransactionLine     = require('../models/TransactionLine');
+const { Sequelize } = require('sequelize');
+const sequelize = require('../db');
+const Transaction = require('../models/Transaction');
+const TransactionLine = require('../models/TransactionLine');
 
 // List all transactions with their lines
 exports.getAllFull = async (req, res, next) => {
@@ -166,3 +166,17 @@ exports.removeFull = async (req, res, next) => {
     next(err);
   }
 };
+
+// Fetch all transactions for a given master account
+exports.getByAccount = async (req, res, next) => {
+  try {
+    const lines = await TransactionLine.findAll({
+      where: { MasterAccountId: req.params.id },
+      include: [{ model: Transaction, as: 'Transaction' }]
+    });
+    res.json(lines);
+  } catch (err) {
+    next(err);
+  }
+};
+

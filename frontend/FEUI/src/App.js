@@ -4,7 +4,9 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 import GroupManager from './GroupManager';
 import GenerateReports from './GenerateReports';
 import UserManagement from './UserManagement';
-import MasterAccountManager from './MasterAccountManager'; // New import
+import MasterAccountManager from './MasterAccountManager'; 
+import TransactionManager from './TransactionManager';
+
 
 function App() {
   const [token, setToken] = useState('');
@@ -242,6 +244,7 @@ function App() {
                     <button onClick={() => navigate('/groupmanager')}>Manage Groups</button>
                     <button onClick={() => navigate('/chartofaccounts')}>Manage Master Accounts</button>
                     <button onClick={() => navigate('/generatereports')}>Generate Reports</button>
+                    <button onClick={() => navigate('/transactions')}>Manage Transactions</button>
                   </div>
                 </>
               )}
@@ -253,6 +256,7 @@ function App() {
       <Route path="/chartofaccounts" element={<MasterAccountManager token={token} currentUser={currentUser} />} />
       <Route path="/generatereports" element={<GenerateReports />} />
       <Route path="/users" element={<UserManagement token={token} />} />
+      <Route path="/transactions" element={<TransactionManager token={token} currentUser={currentUser}/>}/>
     </Routes>
   );
 }

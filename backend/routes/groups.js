@@ -3,7 +3,6 @@ const { verifyToken } = require('../middleware/authMiddleware');
 const ctrl = require('../controllers/groupController');
 const router = express.Router();
 
-// Protect all group routes
 router.use(verifyToken);
 
 // GET /api/groups

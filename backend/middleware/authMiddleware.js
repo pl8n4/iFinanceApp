@@ -8,8 +8,8 @@ exports.verifyToken = (req, res, next) => {
   
   const auth = req.headers.authorization || '';
   const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
+  console.log('→ JWT token:', token);
   if (!token) return res.status(401).json({ message: 'No token provided' });
-
   try {
     const payload = jwt.verify(token, SECRET);
     req.user = payload;
