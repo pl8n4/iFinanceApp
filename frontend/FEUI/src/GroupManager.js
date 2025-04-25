@@ -129,7 +129,7 @@ function GroupManager({ token, currentUser }) {
           />
         </div>
         <div className="form-group">
-          <label htmlFor="accountCategory">Account Category</label>
+          <label htmlFor="accountCategory">Account Category (Element)</label>
           <select
             id="accountCategory"
             value={form.AccountCategoryId}
