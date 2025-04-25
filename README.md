@@ -47,4 +47,5 @@ maybe:
 npm install jspdf jspdf-autotable in frontend/feui
 
 Note:
-In order to deposit you must have an account with an income group
+In order to deposit you must have an account with an income group and an asset group
+At the end of index.js in the backend, await.sequalize.sync when true updates database schema. Best practice to set it to false after first use of syncing database
