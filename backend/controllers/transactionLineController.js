@@ -21,7 +21,6 @@ exports.getById = async (req, res, next) => {
   }
 };
 
-
 // Creates a new transaction line
 // Expects { creditedAmount, debitedAmount, comment, TransactionId, MasterAccountId }
 exports.create = async (req, res, next) => {

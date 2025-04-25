@@ -37,7 +37,12 @@ exports.createUser = [requireAdmin, async (req, res, next) => {
       if (!email) {
         return res.status(400).json({ message: 'email is required for non-admin users.' });
       }
-      await NonAdminUser.create({ id: user.id, email, address, AdministratorId: null });
+      await NonAdminUser.create({
+        id:             user.id,
+        email,
+        address,
+        AdministratorId: req.user.id    // ← use the logged-in admin’s ID
+      });
     } else if (role === 'admin') {
       if (!dateHired) {
         return res.status(400).json({ message: 'dateHired is required for admin users.' });

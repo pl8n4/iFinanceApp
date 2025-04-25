@@ -90,7 +90,12 @@ router.post('/', verifyToken, async (req, res) => {
     } else {
       console.log('Creating NonAdminUser...');
       const nonAdmin = await NonAdminUser.create(
-        { id: baseUser.id, email, address },
+        {
+          id: baseUser.id,
+          email,
+          address,
+          AdministratorId: req.user.id   // capture the admin’s ID
+        },
         { transaction }
       );
       console.log('NonAdminUser created:', nonAdmin.toJSON());
