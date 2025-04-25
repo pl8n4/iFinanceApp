@@ -1,62 +1,18 @@
-// backend/routes/masterAccount.js
-const express = require('express');
-const MasterAccount = require('../models/MasterAccount');
+const { verifyToken } = require('../middleware/authMiddleware');
+const ctrl = require('../controllers/masterAccountController');
+const router = require('express').Router();
 
-const router = express.Router();
+router.use(verifyToken);
 
 // GET /api/master-accounts
-// Fetches all master accounts forom the db in JSON
-router.get('/', async (req, res) => {
-  const all = await MasterAccount.findAll();
-  res.json(all);
-});
-
+router.get('/', ctrl.getAll);
 // GET /api/master-accounts/:id
-// Fetches a single master account by its ID
-router.get('/:id', async (req, res) => {
-  const acct = await MasterAccount.findByPk(req.params.id);
-  if (!acct) return res.status(404).json({ message: 'Not found' });
-  res.json(acct);
-});
-
+router.get('/:id', ctrl.getById);
 // POST /api/master-accounts
-// Creates a new master account based on provided fields
-router.post('/', async (req, res) => {
-  try {
-    const { name, openingAmount, closingAmount, GroupId } = req.body;
-    const created = await MasterAccount.create({
-      name,
-      openingAmount,
-      closingAmount,
-      GroupId
-    });
-    res.status(201).json(created);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-});
-
+router.post('/', ctrl.create);
 // PUT /api/master-accounts/:id
-// Updates an existing master account by its ID with provided fields
-router.put('/:id', async (req, res) => {
-  const { name, openingAmount, closingAmount, GroupId } = req.body;
-  const [updated] = await MasterAccount.update(
-    { name, openingAmount, closingAmount, GroupId },
-    { where: { id: req.params.id } }
-  );
-  if (!updated) return res.status(404).json({ message: 'Not found' });
-  const fresh = await MasterAccount.findByPk(req.params.id);
-  res.json(fresh);
-});
-
+router.put('/:id', ctrl.update);
 // DELETE /api/master-accounts/:id
-// Deletes a master account by its ID.
-router.delete('/:id', async (req, res) => {
-  const deleted = await MasterAccount.destroy({
-    where: { id: req.params.id }
-  });
-  if (!deleted) return res.status(404).json({ message: 'Not found' });
-  res.status(204).end();
-});
+router.delete('/:id', ctrl.remove);
 
 module.exports = router;
