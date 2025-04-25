@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function GroupManager({ token, currentUser }) {
   const [groups, setGroups] = useState([]);
@@ -6,6 +7,7 @@ function GroupManager({ token, currentUser }) {
   const [form, setForm] = useState({ name: '', AccountCategoryId: '', parentId: '' });
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const fetchGroups = async () => {
     try {
@@ -113,6 +115,11 @@ function GroupManager({ token, currentUser }) {
     }
   };
 
+  const handleGoBack = () => {
+    navigate('/'); // Adjust the route as needed
+  };
+
+
   return (
     <div className="user-section">
       <h2>Manage Account Groups for {currentUser?.name || 'User'}</h2>
@@ -203,6 +210,9 @@ function GroupManager({ token, currentUser }) {
           ))}
         </tbody>
       </table>
+      <div className="tabs">
+          <button onClick={handleGoBack}>Go Back</button>
+      </div>
     </div>
   );
 }

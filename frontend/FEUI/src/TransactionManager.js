@@ -82,6 +82,10 @@ useEffect(() => {
     navigate('/chartofaccounts');
   };
 
+  const handleGoBack = () => {
+    navigate('/'); // Adjust the route as needed
+  };
+
   return (
     <div className="manager">
       <h2>Transactions for {currentUser.name}</h2>
@@ -180,6 +184,10 @@ useEffect(() => {
       </form>
 
       {/* (Optional) display a list of transactions below… */}
+    <div className="tabs">
+        <button onClick={handleGoBack}>Go Back</button>
+     </div>
     </div>
+    
   )
 }

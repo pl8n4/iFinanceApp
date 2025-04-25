@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function MasterAccountManager({ token, currentUser }) {
   const [accounts, setAccounts] = useState([]);
@@ -8,6 +9,7 @@ function MasterAccountManager({ token, currentUser }) {
   const [error, setError] = useState('');
   const [history, setHistory] = useState([]);
   const [selected, setSelected] = useState(null);
+  const navigate = useNavigate();
 
   // Fetch all lines for one account (with its parent Transaction)
 const fetchHistory = async acctId => {
@@ -134,6 +136,10 @@ const fetchHistory = async acctId => {
       console.error('Error deleting master account:', err);
     }
   };
+  
+  const handleGoBack = () => {
+    navigate('/'); // Adjust the route as needed
+  };
 
   return (
     <>
@@ -233,7 +239,9 @@ const fetchHistory = async acctId => {
           </tbody>
         </table>
       </div>
-  
+      <div className="tabs">
+        <button onClick={handleGoBack}>Go Back</button>
+      </div>
       {selected && (
         <div className="history-panel">
           <h3>

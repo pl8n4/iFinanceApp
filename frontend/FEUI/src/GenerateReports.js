@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './report.css';
+import { useNavigate } from 'react-router-dom';
 
 function GenerateReports() {
   const [reportType, setReportType] = useState('');
@@ -9,6 +10,7 @@ function GenerateReports() {
   const [loading, setLoading] = useState(false);
   const [reportData, setReportData] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
+  const navigate = useNavigate();
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -36,6 +38,7 @@ function GenerateReports() {
       endDate,
       ...otherCriteria,
     };
+  
 
     try {
       const response = await fetch('/api/generate-report', { // Adjust API endpoint as needed
@@ -59,6 +62,10 @@ function GenerateReports() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoBack = () => {
+    navigate('/'); // Adjust the route as needed
   };
 
   return (
@@ -138,6 +145,9 @@ function GenerateReports() {
         <button type="submit" disabled={loading}>
           {loading ? 'Generating...' : 'Generate Report'}
         </button>
+        <div className="tabs">
+          <button onClick={handleGoBack}>Go Back</button>
+        </div>
 
         {errorMessage && <p style={{ color: 'red' }}>Error: {errorMessage}</p>}
         {reportData && (
@@ -150,7 +160,9 @@ function GenerateReports() {
         )}
       </form>
     </div>
+    
   );
+
 }
 
 export default GenerateReports;

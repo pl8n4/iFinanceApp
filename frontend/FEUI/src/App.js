@@ -6,13 +6,13 @@ import GenerateReports from './GenerateReports';
 import UserManagement from './UserManagement';
 import MasterAccountManager from './MasterAccountManager'; 
 import TransactionManager from './TransactionManager';
+import ChangePassword from './passchange';
 
 
 function App() {
   const [token, setToken] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
   const [form, setForm] = useState({ username: '', password: '' });
-  const [newPassword, setNewPassword] = useState('');
   const [newUser, setNewUser] = useState({
     name: '',
     userName: '',
@@ -41,30 +41,6 @@ function App() {
     }
   };
 
-  const handleChangePassword = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await fetch('http://localhost:5001/api/auth/change-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          oldPassword: form.password,
-          newPassword
-        })
-      });
-      if (!res.ok) throw new Error('Password change failed');
-      alert('Password changed successfully!');
-      setForm({ username: '', password: '' });
-      setNewPassword('');
-      setCurrentUser(null);
-      setToken('');
-    } catch (err) {
-      alert('Error changing password');
-    }
-  };
   
   const handleCreateUser = async (e) => {
     e.preventDefault();
@@ -135,33 +111,6 @@ function App() {
                 >
                   Logout
                 </button>
-              </div>
-
-              <div className="user-section">
-                <h2>Change Password</h2>
-                <form onSubmit={handleChangePassword}>
-                  <div className="form-group">
-                    <label htmlFor="currentPassword">Current Password</label>
-                    <input
-                      type="password"
-                      id="currentPassword"
-                      value={form.password}
-                      onChange={e => setForm({ ...form, password: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="newPassword">New Password</label>
-                    <input
-                      type="password"
-                      id="newPassword"
-                      value={newPassword}
-                      onChange={e => setNewPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <button type="submit">Change Password</button>
-                </form>
               </div>
 
               {currentUser.role === 'admin' && (
@@ -245,6 +194,7 @@ function App() {
                     <button onClick={() => navigate('/chartofaccounts')}>Manage Master Accounts</button>
                     <button onClick={() => navigate('/generatereports')}>Generate Reports</button>
                     <button onClick={() => navigate('/transactions')}>Manage Transactions</button>
+                    <button onClick={() => navigate('/passchange')}>Change Password</button>
                   </div>
                 </>
               )}
@@ -257,6 +207,7 @@ function App() {
       <Route path="/generatereports" element={<GenerateReports />} />
       <Route path="/users" element={<UserManagement token={token} />} />
       <Route path="/transactions" element={<TransactionManager token={token} currentUser={currentUser}/>}/>
+      <Route path="/passchange" element={<ChangePassword token={token} currentUser={currentUser} setCurrentUser={setCurrentUser} />}/>
     </Routes>
   );
 }
