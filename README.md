@@ -13,7 +13,10 @@ Open the IFinanceApp project VSCode and from a terminal in VSCode cd into iFinan
 Once in the IFinanceApp direcory, in the terminal run: npm install
 Then cd from the IFinanceApp into the backend and run: npm install 
 Then cd from the IFinanceApp into the frontend/FEUI and run: npm install
-Also in the frontend/FEUI run: npm install react-scripts
+Also in the frontend/FEUI run two more installs:
+npm install react-scripts
+npm install jspdf jspdf-autotable
+
 Note: the front end/backend may display vulnerabilities, but it should be ok to proceed regardless
 
 In the project editor window in VSCode look for a .env file in the backend directory, if there is not one create a file under backend called .env and paste the following into it, be sure to replace DB_USER = “your mySQL root name” as well as DB_PASS = “your mySQL password” with your SQL server info:
