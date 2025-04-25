@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function TransactionManager({ token, currentUser }) {
   const [transactions, setTransactions] = useState([]);
+  const navigate = useNavigate();
   const [form, setForm] = useState({ 
     date: '', 
     description: '',
@@ -77,6 +79,7 @@ useEffect(() => {
         { MasterAccountId: '', debitedAmount: '', creditedAmount: '', comment: '' }
       ]
     });
+    navigate('/chartofaccounts');
   };
 
   return (

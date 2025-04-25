@@ -2,6 +2,7 @@ const { Sequelize } = require('sequelize');
 const sequelize = require('../db');
 const Transaction = require('../models/Transaction');
 const TransactionLine = require('../models/TransactionLine');
+const MasterAccount = require('../models/MasterAccount');  // ← NEW
 
 // List all transactions with their lines
 exports.getAllFull = async (req, res, next) => {
@@ -47,27 +48,37 @@ exports.createFull = async (req, res, next) => {
       throw new Error('Sum of debits must equal sum of credits');
     }
 
-    // Create header
+    // 1) Create header
     const tx = await Transaction.create(
       { date, description, NonAdminUserId },
       { transaction: t }
     );
 
-    // Create each detail line
-    for (const line of lines) {
-      await TransactionLine.create(
-        { ...line, TransactionId: tx.id },
+    // 2) Create each detail line and update account balances
+    for (const ln of lines) {
+      const createdLine = await TransactionLine.create(
+        { ...ln, TransactionId: tx.id },
         { transaction: t }
       );
+
+      // adjust the related MasterAccount.closingAmount
+      const acct = await MasterAccount.findByPk(
+        createdLine.MasterAccountId,
+        { transaction: t }
+      );
+      const delta = parseFloat(createdLine.debitedAmount) - parseFloat(createdLine.creditedAmount);
+      acct.closingAmount = (acct.closingAmount || 0) + delta;
+      await acct.save({ transaction: t });
     }
 
     await t.commit();
 
-    // Return the freshly-saved transaction
+    // 3) Return the freshly-saved transaction
     const full = await Transaction.findByPk(tx.id, {
       include: [{ model: TransactionLine, as: 'lines' }]
     });
     res.status(201).json(full);
+
   } catch (err) {
     await t.rollback();
     next(err);
@@ -85,20 +96,20 @@ exports.updateFull = async (req, res, next) => {
       throw new Error('Sum of debits must equal sum of credits');
     }
 
-    // Update header
+    // 1) Update header
     const [updated] = await Transaction.update(
       { date, description },
       { where: { id: txId }, transaction: t }
     );
     if (!updated) throw new Error('Not found');
 
-    // Fetch existing lines
+    // 2) Fetch existing lines
     const existing = await TransactionLine.findAll({
       where: { TransactionId: txId },
       transaction: t
     });
 
-    // Delete removed lines
+    // 3) Delete removed lines
     const incomingIds = lines.filter(l => l.id).map(l => l.id);
     for (const ex of existing) {
       if (!incomingIds.includes(ex.id)) {
@@ -109,34 +120,45 @@ exports.updateFull = async (req, res, next) => {
       }
     }
 
-    // Upsert incoming lines
-    for (const line of lines) {
-      if (line.id) {
-        // Update
+    // 4) Upsert incoming lines
+    for (const ln of lines) {
+      if (ln.id) {
+        // Update existing
         await TransactionLine.update(
-          { debitedAmount: line.debitedAmount,
-            creditedAmount: line.creditedAmount,
-            comment: line.comment,
-            MasterAccountId: line.MasterAccountId
+          {
+            debitedAmount:  ln.debitedAmount,
+            creditedAmount: ln.creditedAmount,
+            comment:        ln.comment,
+            MasterAccountId: ln.MasterAccountId
           },
-          { where: { id: line.id }, transaction: t }
+          { where: { id: ln.id }, transaction: t }
         );
       } else {
-        // Create new
-        await TransactionLine.create(
-          { ...line, TransactionId: txId },
+        // Create new line
+        const newLine = await TransactionLine.create(
+          { ...ln, TransactionId: txId },
           { transaction: t }
         );
+
+        // update account balance for the new line
+        const acct = await MasterAccount.findByPk(
+          newLine.MasterAccountId,
+          { transaction: t }
+        );
+        const delta = parseFloat(newLine.debitedAmount) - parseFloat(newLine.creditedAmount);
+        acct.closingAmount = (acct.closingAmount || 0) + delta;
+        await acct.save({ transaction: t });
       }
     }
 
     await t.commit();
 
-    // Return updated transaction
+    // 5) Return updated transaction
     const full = await Transaction.findByPk(txId, {
       include: [{ model: TransactionLine, as: 'lines' }]
     });
     res.json(full);
+
   } catch (err) {
     await t.rollback();
     next(err);
@@ -147,12 +169,24 @@ exports.updateFull = async (req, res, next) => {
 exports.removeFull = async (req, res, next) => {
   const t = await sequelize.transaction();
   try {
-    // Remove detail lines first
+    // 1) Adjust balances back before deletion
+    const lines = await TransactionLine.findAll({
+      where: { TransactionId: req.params.id },
+      transaction: t
+    });
+    for (const ln of lines) {
+      const acct = await MasterAccount.findByPk(ln.MasterAccountId, { transaction: t });
+      const delta = parseFloat(ln.creditedAmount) - parseFloat(ln.debitedAmount);
+      acct.closingAmount = (acct.closingAmount || 0) + delta;
+      await acct.save({ transaction: t });
+    }
+
+    // 2) Remove detail lines
     await TransactionLine.destroy({
       where: { TransactionId: req.params.id },
       transaction: t
     });
-    // Then header
+    // 3) Then header
     const deleted = await Transaction.destroy({
       where: { id: req.params.id },
       transaction: t
@@ -161,6 +195,7 @@ exports.removeFull = async (req, res, next) => {
 
     await t.commit();
     res.status(204).end();
+
   } catch (err) {
     await t.rollback();
     next(err);
@@ -179,4 +214,3 @@ exports.getByAccount = async (req, res, next) => {
     next(err);
   }
 };
-
