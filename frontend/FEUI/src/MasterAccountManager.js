@@ -1,3 +1,5 @@
+//This page manages the Master account and allows the users to add them into there user information. 
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,7 +13,7 @@ function MasterAccountManager({ token, currentUser }) {
   const [history, setHistory] = useState([]);
   const [selected, setSelected] = useState(null);
 
-  // Fetch categories
+  // Fetch categories to populate the drop down bar.
   useEffect(() => {
     if (!token) return;
     fetch('http://localhost:5001/api/categories', {
@@ -39,7 +41,8 @@ function MasterAccountManager({ token, currentUser }) {
       console.error('Error loading history:', err);
     }
   };
-
+  
+  //gets all the accounts from the database by making a query to the backend and populates it to the table
   const fetchAccounts = async () => {
     try {
       const res = await fetch('http://localhost:5001/api/master-accounts', {
@@ -50,7 +53,7 @@ function MasterAccountManager({ token, currentUser }) {
         throw new Error(`Failed to fetch master accounts: ${res.status} ${errorText}`);
       }
       const data = await res.json();
-      if (Array.isArray(data)) {
+      if (Array.isArray(data)) { //populates an array with accounts fetched from the DB and checks if it did so successfully
         setAccounts(data);
       } else {
         setError('Unexpected response format');
@@ -61,6 +64,7 @@ function MasterAccountManager({ token, currentUser }) {
     }
   };
 
+  //gets the groups and populates the drop down bar
   const fetchGroups = async () => {
     try {
       const res = await fetch('http://localhost:5001/api/groups', {
@@ -71,7 +75,7 @@ function MasterAccountManager({ token, currentUser }) {
         throw new Error(`Failed to fetch groups: ${res.status} ${errorText}`);
       }
       const data = await res.json();
-      if (Array.isArray(data)) {
+      if (Array.isArray(data)) { //populates an array with the groups fetched from DB and checks if it was successful
         setGroups(data);
       } else {
         setError('No groups found');
@@ -82,12 +86,14 @@ function MasterAccountManager({ token, currentUser }) {
     }
   };
 
+  //should use this upon rendering the page to get information to display
   useEffect(() => {
     if (!token) return;
     fetchAccounts();
     fetchGroups();
   }, [token]);
 
+  //handles submissions made on the submission form
   const handleSubmit = async e => {
     e.preventDefault();
     setError('');
@@ -115,13 +121,14 @@ function MasterAccountManager({ token, currentUser }) {
       }
       setForm({ name: '', openingAmount: '', closingAmount: '', GroupId: '' });
       setEditingId(null);
-      fetchAccounts();
+      fetchAccounts(); //repopulates the page with the newly updated account list
     } catch (err) {
       setError(err.message);
       console.error('Error submitting master account:', err);
     }
   };
 
+  //will send an updated version of the account backend then the changes are committed and save to the database
   const handleEdit = account => {
     setForm({
       name: account.name,
@@ -133,26 +140,28 @@ function MasterAccountManager({ token, currentUser }) {
     setError('');
   };
 
+  //sends a request to delete an account from the backend
   const handleDelete = async id => {
     setError('');
     try {
       const res = await fetch(`http://localhost:5001/api/master-accounts/${id}`, {
-        method: 'DELETE',
+        method: 'DELETE', //method it will try to use from the controller
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.message || 'Failed to delete master account');
       }
-      fetchAccounts();
+      fetchAccounts(); //if delete successful, it will repopulate the page with the newly updated account list
     } catch (err) {
       setError(err.message);
       console.error('Error deleting master account:', err);
     }
   };
   
+  //function to handle navigating back to the home page
   const handleGoBack = () => {
-    navigate('/'); // Adjust the route as needed
+    navigate('/');
   };
 
   return (

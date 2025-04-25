@@ -1,3 +1,9 @@
+//This is the home page of the application. Each user will be directed to this page when they login to the app.
+//Depending on the priviledges of the user (whether they are admin or non-admin user) certain 
+//only certain parts of the page will render
+//i.e. if they are an admin, user creation and a user management option will render.
+//this will no happen for non-admin users
+
 import React, { useState } from 'react';
 import './App.css';
 import { Routes, Route, useNavigate } from 'react-router-dom';
@@ -23,6 +29,9 @@ function App() {
 
   const navigate = useNavigate();
 
+  //Handles the login using a post method that is routed to the backend.
+  //It will send this data in the form of a token that is formatted in the 
+  //submission form. 
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
@@ -40,6 +49,9 @@ function App() {
     }
   };
 
+  //Only can be used by the admin. This will take a submission form from the admin
+  //and create a token that will be formatted by the submisison form. This will
+  //be passed to the backend to be saved to the database.
   const handleCreateUser = async (e) => {
     e.preventDefault();
     try {
@@ -62,6 +74,7 @@ function App() {
     }
   };
 
+  //items to be rendered
   return (
     <Routes>
       <Route
@@ -103,14 +116,19 @@ function App() {
                 <button
                   onClick={() => {
                     setCurrentUser(null);
-                    setToken('');
+                    setToken('');   {/*whenever the user logs out, the current user is set to empty and null status*/}
                   }}
                   className="logout-button"
                 >
                   Logout
                 </button>
               </div>
-
+              {/*this is a check to see if the current user is an admin, 
+               if so, this portion will be rendered for the admin's view.
+               this is the new user creation form. It will accept a user's name,
+               username, password, role, email, and address. If the role specified in the form
+               is not a user, rather an admin, the address and email options will not render
+               in the form.*/}
               {currentUser.role === 'admin' && (
                 <div className="admin-section">
                   <h2>Create New User</h2>
@@ -185,6 +203,8 @@ function App() {
                 </div>
               )}
 
+              {/*This will only render if the current user is a non-admin user. This is just a collection
+              of buttons that allow the user to navigate to all the other functionalities of the application*/}
               {currentUser.role === 'user' && (
                 <>
                   <div className="tabs">
@@ -200,6 +220,8 @@ function App() {
           )
         }
       />
+      {/*these are the routes that specify the path for all the buttons for navigation. This is used to correctly handle
+        directing the user to the appropriate page*/}
       <Route path="/groupmanager" element={<GroupManager token={token} currentUser={currentUser} />} />
       <Route path="/chartofaccounts" element={<MasterAccountManager token={token} currentUser={currentUser} />} />
       <Route path="/generatereports" element={<GenerateReports token={token} />} />

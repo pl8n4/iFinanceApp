@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+//general function for group manager that accepts a token from the app.js and the currently logged in user
 function GroupManager({ token, currentUser }) {
   const [groups, setGroups] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -9,6 +10,7 @@ function GroupManager({ token, currentUser }) {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  //will populate the space with all groups currently saved in the database under that user
   const fetchGroups = async () => {
     try {
       const res = await fetch('http://localhost:5001/api/groups', {
@@ -30,6 +32,12 @@ function GroupManager({ token, currentUser }) {
     }
   };
 
+  //fetches all the categories saved within the database
+  //it should be noted that the backend must be seeded with appropriate categories for the 
+  //dropdown box to work
+  //there should be a note in the README section, but here is the code for seeding
+  //you run this in the backend terminal
+  //node scripts/seedCategories.js
   const fetchCategories = async () => {
     try {
       const res = await fetch('http://localhost:5001/api/categories', {
@@ -56,6 +64,7 @@ function GroupManager({ token, currentUser }) {
     fetchCategories();
   }, [token]);
 
+  //this handles submissions from the form and sends them to the back using middleware and routing
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -80,6 +89,7 @@ function GroupManager({ token, currentUser }) {
       }
       setForm({ name: '', AccountCategoryId: '', parentId: '' });
       setEditingId(null);
+      //once updated, we must fetch the new list of groups
       fetchGroups();
     } catch (err) {
       setError(err.message);
@@ -87,6 +97,7 @@ function GroupManager({ token, currentUser }) {
     }
   };
 
+  //handles and edit submissions
   const handleEdit = (group) => {
     setForm({
       name: group.name,
@@ -97,6 +108,7 @@ function GroupManager({ token, currentUser }) {
     setError('');
   };
 
+  //handles deletion of a group by users
   const handleDelete = async (id) => {
     setError('');
     try {
@@ -108,6 +120,7 @@ function GroupManager({ token, currentUser }) {
         const errorData = await res.json();
         throw new Error(errorData.message || 'Failed to delete group');
       }
+      //updates the group list after deletion
       fetchGroups();
     } catch (err) {
       setError(err.message);
@@ -115,11 +128,13 @@ function GroupManager({ token, currentUser }) {
     }
   };
 
+  //this simply handles going back to the home page
   const handleGoBack = () => {
-    navigate('/'); // Adjust the route as needed
+    navigate('/');
   };
 
 
+  //html to be rendered
   return (
     <div className="user-section">
       <div className="tabs">

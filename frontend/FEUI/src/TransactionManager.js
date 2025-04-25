@@ -108,6 +108,9 @@ export default function TransactionManager({ token, currentUser }) {
   const handleDeposit = async e => {
     e.preventDefault();
     const amt = parseFloat(depositAmount);
+
+    //parameter check to see if the deposit account is valid and 
+    //a valid amount is given
     if (!depositAccount || isNaN(amt)) {
       alert('Account and valid amount required');
       return;
@@ -151,6 +154,7 @@ export default function TransactionManager({ token, currentUser }) {
   // Lookup Assets category ID
   const assetsCategoryId = categories.find(c => c.name === 'Assets')?.id;
 
+  //a go back function that will direct the user to the home page.
   const handleGoBack = () => {
     navigate('/');
   };
