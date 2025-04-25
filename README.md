@@ -45,3 +45,6 @@ Note: there is a chance that you may need to install other package(s), if so the
 
 maybe:
 npm install jspdf jspdf-autotable in frontend/feui
+
+Note:
+In order to deposit you must have an account with an income group
