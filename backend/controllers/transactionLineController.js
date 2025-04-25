@@ -1,6 +1,12 @@
 const TransactionLine = require('../models/TransactionLine');
 
-// Fetches all debit/credit transaction lines
+/**
+ * Provides CRUD operations for individual transaction lines, using Sequelize’s TransactionLine model 
+ * to manage debit/credit entries linked to transactions and accounts.
+ * This file gets used a lot by the transaction controller to manage the lines of transactions.
+ */
+
+// Called to fetch and return all transaction lines across all transactions
 exports.getAll = async (req, res, next) => {
   try {
     const lines = await TransactionLine.findAll();
@@ -10,7 +16,7 @@ exports.getAll = async (req, res, next) => {
   }
 };
 
-// Fetches a single transaction line by its ID
+// Called to fetch and return a single transaction line by its ID
 exports.getById = async (req, res, next) => {
   try {
     const line = await TransactionLine.findByPk(req.params.id);
@@ -21,8 +27,8 @@ exports.getById = async (req, res, next) => {
   }
 };
 
-// Creates a new transaction line
-// Expects { creditedAmount, debitedAmount, comment, TransactionId, MasterAccountId }
+// Creates a neew transaction line with specific debit, credit, and comment
+// Links it to a transaction and a master account
 exports.create = async (req, res, next) => {
   try {
     const { creditedAmount, debitedAmount, comment, TransactionId, MasterAccountId } = req.body;
@@ -40,8 +46,8 @@ exports.create = async (req, res, next) => {
 };
 
 
-// Updates an existing transaction line
-// Expects { creditedAmount, debitedAmount, comment, TransactionId, MasterAccountId }
+// Updates an exisitng transaction line with specifc debit, credit, and 
+// comment by its transaction id, account, or its id
 exports.update = async (req, res, next) => {
   try {
     const { creditedAmount, debitedAmount, comment, TransactionId, MasterAccountId } = req.body;

@@ -4,6 +4,13 @@ const UserPassword = require('../models/UserPassword');
 const NonAdminUser = require('../models/NonAdminUser');
 const Administrator = require('../models/Administrator');
 
+
+/**
+ * Manages admin‐only user operations—creating, listing, retrieving, updating, and deleting users—
+ * uses Sequelize models for BaseUser, UserPassword, NonAdminUser, and Administrator,
+ * and bcrypt for password hashing.
+ */
+
 const SALT_ROUNDS = parseInt(process.env.SALT_ROUNDS) || 10;
 
 // Helper to enforce admin-only actions
@@ -14,7 +21,7 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-// Create a new user (admin-only)
+// Creates a new user (admin-only), including hashing the password and creating appropriate profile
 exports.createUser = [requireAdmin, async (req, res, next) => {
     try {
     const { name, userName, password, role, email, address, dateHired, dateFinished } = req.body;
@@ -38,10 +45,10 @@ exports.createUser = [requireAdmin, async (req, res, next) => {
         return res.status(400).json({ message: 'email is required for non-admin users.' });
       }
       await NonAdminUser.create({
-        id:             user.id,
+        id: user.id,
         email,
         address,
-        AdministratorId: req.user.id    // ← use the logged-in admin’s ID
+        AdministratorId: req.user.id    // use the logged-in admin’s ID to log who created this user
       });
     } else if (role === 'admin') {
       if (!dateHired) {
@@ -55,7 +62,7 @@ exports.createUser = [requireAdmin, async (req, res, next) => {
   }
 }];
 
-// Retrieve all users (admin-only)
+// Retrieve all users (admin-only), including credentials and profiles
 exports.getAllUsers = [requireAdmin, async (req, res, next) => {
   try {
     const users = await BaseUser.findAll({
@@ -91,7 +98,7 @@ exports.getUserById = [requireAdmin, async (req, res, next) => {
   }
 }];
 
-// Update user (admin-only)
+// Update a users profile or name (admin-only) by its ID, 
 exports.updateUser = [requireAdmin, async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -118,7 +125,7 @@ exports.updateUser = [requireAdmin, async (req, res, next) => {
   }
 }];
 
-// Delete user (admin-only)
+// Delete user (admin-only) by its ID including cascading delete of credentials and profile 
 exports.deleteUser = [requireAdmin, async (req, res, next) => {
   try {
     const { id } = req.params;

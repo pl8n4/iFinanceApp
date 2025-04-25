@@ -1,7 +1,13 @@
 const MasterAccount = require('../models/MasterAccount');
 const Group         = require('../models/Group');
 
-// 1) Only fetch this user’s accounts
+
+/**
+ * Manages CRUD operations for MasterAccount for an authenticated non-admin user,
+ * uses Sequelize’s MasterAccount and Group models to interact with the database.
+ */
+
+// Fetches all accounts that belong to the authenticated user
 exports.getAll = async (req, res, next) => {
   try {
     const accounts = await MasterAccount.findAll({
@@ -14,7 +20,7 @@ exports.getAll = async (req, res, next) => {
   }
 };
 
-// 2) Fetch one account by ID (ensure it belongs to this user)
+// Fetches a single account by its ID, only if it belongs to the authenticated user
 exports.getById = async (req, res, next) => {
   try {
     const acct = await MasterAccount.findOne({
@@ -28,7 +34,7 @@ exports.getById = async (req, res, next) => {
   }
 };
 
-// 3) Create a new account, attaching the user ID
+// Creates a new account for the authenticated user
 exports.create = async (req, res, next) => {
   try {
     const NonAdminUserId = req.user.id;
@@ -46,7 +52,7 @@ exports.create = async (req, res, next) => {
   }
 };
 
-// 4) Update an existing account (only if it belongs to this user)
+// Updates an existing account, only if it belongs to the authenticated user
 exports.update = async (req, res, next) => {
   try {
     const { name, openingAmount, closingAmount, GroupId } = req.body;
@@ -64,7 +70,7 @@ exports.update = async (req, res, next) => {
   }
 };
 
-// 5) Delete an account (only if it belongs to this user)
+// Called to remove an account by its ID, only if it belongs to the authenticated user
 exports.remove = async (req, res, next) => {
   try {
     const deleted = await MasterAccount.destroy({

@@ -1,9 +1,7 @@
-// reportController.js
-
-const Transaction       = require('../models/Transaction');
-const TransactionLine   = require('../models/TransactionLine');
-const MasterAccount     = require('../models/MasterAccount');
-const { Op }            = require('sequelize');
+const Transaction = require('../models/Transaction');
+const TransactionLine = require('../models/TransactionLine');
+const MasterAccount = require('../models/MasterAccount');
+const { Op } = require('sequelize');
 
 exports.generateReport = async (req, res, next) => {
   try {

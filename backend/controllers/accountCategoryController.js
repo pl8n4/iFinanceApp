@@ -1,19 +1,25 @@
 const AccountCategory = require('../models/AccountCategory');
 
+/**
+ * Provides RESTful endpoints to list, retrieve, create, update, and delete account categories.
+ * Implements CRUD operations by using Sequelize’s AccountCategory model to interact with the database.
+ * Thhis file doesnt get used much, really only when the seed command for categories covered in the README
+ * calls this file to create the neccassery categories.
+ */
+
+// Called to fetch and return all account categories
 exports.getAll = async (req, res, next) => {
   try {
-    // Fetch every AccountCategory row
     const cats = await AccountCategory.findAll();
     res.json(cats);
   } catch (err) {
-    // Delegate errors to your global error handler
     next(err);
   }
 };
 
+// Called to fetch and return a single account category by its ID
 exports.getById = async (req, res, next) => {
   try {
-    // Look up a single category by its UUID
     const cat = await AccountCategory.findByPk(req.params.id);
     if (!cat) return res.status(404).json({ message: 'Not found' });
     res.json(cat);
@@ -22,11 +28,10 @@ exports.getById = async (req, res, next) => {
   }
 };
 
+// Creates a new account category
 exports.create = async (req, res, next) => {
   try {
-    // Destructure the two required fields
     const { name, type } = req.body;
-    // Create + return the new record with 201 status
     const created = await AccountCategory.create({ name, type });
     res.status(201).json(created);
   } catch (err) {
@@ -34,10 +39,10 @@ exports.create = async (req, res, next) => {
   }
 };
 
+// Updates an existing account category
 exports.update = async (req, res, next) => {
   try {
     const { name, type } = req.body;
-    // Sequelize.update returns [numberOfRowsAffected]
     const [updated] = await AccountCategory.update(
       { name, type },
       { where: { id: req.params.id } }
@@ -51,12 +56,11 @@ exports.update = async (req, res, next) => {
   }
 };
 
+// Removes an account category by its ID
 exports.remove = async (req, res, next) => {
   try {
-    // Destroy by PK
     const deleted = await AccountCategory.destroy({ where: { id: req.params.id } });
     if (!deleted) return res.status(404).json({ message: 'Not found' });
-    // 204 No Content on success
     res.status(204).end();
   } catch (err) {
     next(err);

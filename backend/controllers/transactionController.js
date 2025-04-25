@@ -2,9 +2,14 @@ const { Sequelize } = require('sequelize');
 const sequelize = require('../db');
 const Transaction = require('../models/Transaction');
 const TransactionLine = require('../models/TransactionLine');
-const MasterAccount = require('../models/MasterAccount');  // ← NEW
+const MasterAccount = require('../models/MasterAccount');
 
-// List all transactions with their lines
+/**
+ * Provides endpoints for full CRUD on Transactions and their lines for the authenticated user,
+ * using Sequelize transactions to ensure double-entry bookkeeping integrity.
+ */
+
+// Lists all transactions along with their detail lines in descending order by date
 exports.getAllFull = async (req, res, next) => {
   try {
     const txs = await Transaction.findAll({
@@ -17,7 +22,7 @@ exports.getAllFull = async (req, res, next) => {
   }
 };
 
-// Fetch one transaction + lines
+// Fetches a single transaction by its ID, including its detail lines
 exports.getByIdFull = async (req, res, next) => {
   try {
     const tx = await Transaction.findByPk(req.params.id, {
@@ -30,14 +35,14 @@ exports.getByIdFull = async (req, res, next) => {
   }
 };
 
-// Helper to validate debits == credits
+// Helper to ensure total debit rquals total credit in a set of lines
 function validateBalance(lines) {
   const totalDebit  = lines.reduce((s,l) => s + (l.debitedAmount  || 0), 0);
   const totalCredit = lines.reduce((s,l) => s + (l.creditedAmount || 0), 0);
   return totalDebit === totalCredit;
 }
 
-// Create a transaction + its lines in one call
+// Creates a new transaction with its detail lines, adjusting account balances accordingly
 exports.createFull = async (req, res, next) => {
   const t = await sequelize.transaction();
   try {
@@ -47,21 +52,18 @@ exports.createFull = async (req, res, next) => {
     if (!validateBalance(lines)) {
       throw new Error('Sum of debits must equal sum of credits');
     }
-
-    // 1) Create header
+    // Create the transaction header
     const tx = await Transaction.create(
       { date, description, NonAdminUserId },
       { transaction: t }
     );
-
-    // 2) Create each detail line and update account balances
+    // Create the detail lines
     for (const ln of lines) {
       const createdLine = await TransactionLine.create(
         { ...ln, TransactionId: tx.id },
         { transaction: t }
       );
 
-      // adjust the related MasterAccount.closingAmount
       const acct = await MasterAccount.findByPk(
         createdLine.MasterAccountId,
         { transaction: t }
@@ -73,7 +75,7 @@ exports.createFull = async (req, res, next) => {
 
     await t.commit();
 
-    // 3) Return the freshly-saved transaction
+    // Return the full transaction with lines
     const full = await Transaction.findByPk(tx.id, {
       include: [{ model: TransactionLine, as: 'lines' }]
     });
@@ -85,7 +87,7 @@ exports.createFull = async (req, res, next) => {
   }
 };
 
-// Update a transaction + its lines
+// Updates an existing transaction and its detail lines, adjusting account balances accordingly
 exports.updateFull = async (req, res, next) => {
   const t = await sequelize.transaction();
   try {
@@ -96,20 +98,20 @@ exports.updateFull = async (req, res, next) => {
       throw new Error('Sum of debits must equal sum of credits');
     }
 
-    // 1) Update header
+    // Update transaction header
     const [updated] = await Transaction.update(
       { date, description },
       { where: { id: txId }, transaction: t }
     );
     if (!updated) throw new Error('Not found');
 
-    // 2) Fetch existing lines
+    // Fetch existing lines for compasrison
     const existing = await TransactionLine.findAll({
       where: { TransactionId: txId },
       transaction: t
     });
 
-    // 3) Delete removed lines
+    // Delete lines that were removed by the user
     const incomingIds = lines.filter(l => l.id).map(l => l.id);
     for (const ex of existing) {
       if (!incomingIds.includes(ex.id)) {
@@ -120,10 +122,9 @@ exports.updateFull = async (req, res, next) => {
       }
     }
 
-    // 4) Upsert incoming lines
+    // 4) Upsert incoming lines (update or create), adjusting account balances for new lines
     for (const ln of lines) {
       if (ln.id) {
-        // Update existing
         await TransactionLine.update(
           {
             debitedAmount:  ln.debitedAmount,
@@ -134,13 +135,11 @@ exports.updateFull = async (req, res, next) => {
           { where: { id: ln.id }, transaction: t }
         );
       } else {
-        // Create new line
         const newLine = await TransactionLine.create(
           { ...ln, TransactionId: txId },
           { transaction: t }
         );
 
-        // update account balance for the new line
         const acct = await MasterAccount.findByPk(
           newLine.MasterAccountId,
           { transaction: t }
@@ -153,7 +152,7 @@ exports.updateFull = async (req, res, next) => {
 
     await t.commit();
 
-    // 5) Return updated transaction
+    // Return updated transaction with lines
     const full = await Transaction.findByPk(txId, {
       include: [{ model: TransactionLine, as: 'lines' }]
     });
@@ -165,11 +164,11 @@ exports.updateFull = async (req, res, next) => {
   }
 };
 
-// Delete a transaction and its lines
+// Deletes a transaction and its detail lines, adjusting account balances accordingly
 exports.removeFull = async (req, res, next) => {
   const t = await sequelize.transaction();
   try {
-    // 1) Adjust balances back before deletion
+    // Revere all line impacts on account balances
     const lines = await TransactionLine.findAll({
       where: { TransactionId: req.params.id },
       transaction: t
@@ -181,12 +180,12 @@ exports.removeFull = async (req, res, next) => {
       await acct.save({ transaction: t });
     }
 
-    // 2) Remove detail lines
+    // Remove detail lines
     await TransactionLine.destroy({
       where: { TransactionId: req.params.id },
       transaction: t
     });
-    // 3) Then header
+    // Deletes the transaction header
     const deleted = await Transaction.destroy({
       where: { id: req.params.id },
       transaction: t
@@ -202,7 +201,7 @@ exports.removeFull = async (req, res, next) => {
   }
 };
 
-// Fetch all transactions for a given master account
+// Fetches all transaction lines for a specific master account ID
 exports.getByAccount = async (req, res, next) => {
   try {
     const lines = await TransactionLine.findAll({

@@ -6,8 +6,18 @@ const BaseUser = require('../models/BaseUser');
 const UserPassword = require('../models/UserPassword');
 const NonAdminUser = require('../models/NonAdminUser');
 
+/**
+ * Handles user authentication: logging in users by verifying credentials and issuing JWTs, 
+ * and allowing users to change their password, using bcrypt for hashing and jsonwebtoken for tokens.
+ * Uses Sequelize models to interact with the database.
+ */
+
 const JWT_SECRET = process.env.JWT_SECRET;
 
+/**
+ * Authenticates a user by verifying their username and password, 
+ * encrypts the password using bcrypt, and then issues a JWT and returns basic user info.
+ */
 exports.login = async (req, res, next) => {
   try {
     const { username, password } = req.body;
@@ -57,6 +67,10 @@ exports.login = async (req, res, next) => {
   }
 };
 
+/**
+ * Called to change the authenticated user’s password by verifying the old password, 
+ * hashing and saving the new one.
+ */
 exports.changePassword = async (req, res, next) => {
   try {
     const userId = req.user.id;

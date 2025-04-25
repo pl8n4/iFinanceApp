@@ -1,7 +1,12 @@
 const Group = require('../models/Group');
 const { Op } = require('sequelize');
 
-// Fetches groups for the authenticated user
+/**
+ * Handles CRUD operations for account groups scoped to the authenticated non-admin user,
+ * using Sequelize’s Group model to ensure each user only manages their own groups.
+ */
+
+// Fetches groups that belong to the authenticated user
 exports.getAll = async (req, res, next) => {
   try {
     console.log('req.user:', req.user);
@@ -15,7 +20,7 @@ exports.getAll = async (req, res, next) => {
   }
 };
 
-// Fetches a single group by its ID
+// Fetches and return a single group by its ID, only if it belongs to the authenticated user
 exports.getById = async (req, res, next) => {
   try {
     const group = await Group.findOne({
@@ -32,12 +37,11 @@ exports.getById = async (req, res, next) => {
   }
 };
 
-// Creates a new group
+// Creates a new group for the authenticated user,
+// ensuring the group name is unique and valid parent
 exports.create = async (req, res, next) => {
   try {
     const { name, AccountCategoryId, parentId } = req.body;
-
-    // Check if a group with this name already exists for the user
     const existingGroup = await Group.findOne({
       where: {
         name,
@@ -48,7 +52,6 @@ exports.create = async (req, res, next) => {
       return res.status(400).json({ message: 'Group name already exists for this user' });
     }
 
-    // Validate parentId if provided
     let validatedParentId = parentId || null;
     if (parentId) {
       const parentGroup = await Group.findOne({
@@ -76,12 +79,10 @@ exports.create = async (req, res, next) => {
   }
 };
 
-// Updates an existing group
+// Updates an exisiting groups name, category, or parent, only if it belongs to the authenticated user
 exports.update = async (req, res, next) => {
   try {
     const { name, AccountCategoryId, parentId } = req.body;
-
-    // Find the group and ensure it belongs to the user
     const group = await Group.findOne({
       where: {
         id: req.params.id,
@@ -90,7 +91,6 @@ exports.update = async (req, res, next) => {
     });
     if (!group) return res.status(404).json({ message: 'Group not found or not yours' });
 
-    // If updating the name, ensure the new name doesn't already exist
     let newName = group.name;
     if (name && name !== group.name) {
       const existingGroup = await Group.findOne({
@@ -106,7 +106,6 @@ exports.update = async (req, res, next) => {
       newName = name;
     }
 
-    // Validate parentId if provided
     let validatedParentId = group.parentId;
     if (parentId !== undefined) {
       validatedParentId = parentId || null;
@@ -136,7 +135,7 @@ exports.update = async (req, res, next) => {
   }
 };
 
-// Remove a group by its ID
+// Removes a group by its ID, only if it belongs to the authenticated user
 exports.remove = async (req, res, next) => {
   try {
     const deleted = await Group.destroy({
