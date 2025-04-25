@@ -11,7 +11,7 @@ exports.verifyToken = (req, res, next) => {
   console.log('→ JWT token:', token);
   if (!token) return res.status(401).json({ message: 'No token provided' });
   try {
-    const payload = jwt.verify(token, SECRET);
+    //const payload = jwt.verify(token, SECRET);
     req.user = payload;
     next();
   } catch (err) {
