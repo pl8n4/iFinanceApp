@@ -11,7 +11,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 exports.login = async (req, res, next) => {
   try {
     const { username, password } = req.body;
-    console.log('🔐 Login attempt:', req.body); // ✅ LOGGING HERE
+    console.log('🔐 Login attempt:', req.body);
 
     if (!username || !password) {
       return res.status(400).json({ message: 'username and password required.' });
@@ -19,13 +19,13 @@ exports.login = async (req, res, next) => {
 
     const pwRec = await UserPassword.findOne({ where: { userName: username } });
     if (!pwRec) {
-      console.log('❌ User not found in UserPasswords');
+      console.log('User not found in UserPasswords');
       return res.status(401).json({ message: 'Invalid credentials.' });
     }
 
     const ok = await bcrypt.compare(password, pwRec.encryptedPassword);
     if (!ok) {
-      console.log('❌ Password does not match');
+      console.log('Password does not match');
       return res.status(401).json({ message: 'Invalid credentials.' });
     }
 
@@ -35,7 +35,7 @@ exports.login = async (req, res, next) => {
     });
 
     if (!user) {
-      console.log('❌ BaseUser not found');
+      console.log('BaseUser not found');
       return res.status(404).json({ message: 'User not found.' });
     }
 

@@ -67,4 +67,13 @@ async function start() {
   }
 }
 
+// These are all the routes
+app.use('/api/categories', categoryRouter);
+app.use('/api/groups', groupRouter);
+app.use('/api/master-accounts', masterAccountRouter);
+app.use('/api/transactions', transactionRouter);
+// app.use('/api/transaction-lines', transactionLineRouter);
+app.use('/api/users', userRouter);
+app.use('/api/auth', authRouter)
+
 start();

@@ -8,7 +8,7 @@ const Administrator = require('../models/Administrator');
 (async function seedAdmin() {
   try {
     await sequelize.authenticate();
-    await sequelize.sync();  // adjust if you prefer alter:false here
+    await sequelize.sync(); 
 
     // Only seed if no admins exist
     const adminCount = await Administrator.count();

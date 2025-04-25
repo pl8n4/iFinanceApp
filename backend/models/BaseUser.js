@@ -1,4 +1,3 @@
-// backend/models/BaseUser.js
 const { DataTypes } = require('sequelize');
 const sequelize = require('../db');
 
@@ -9,6 +8,15 @@ const BaseUser = sequelize.define('BaseUser', {
     primaryKey: true
   },
   name: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  userName: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: 'uniq_BaseUsers_userName'
+  },
+  role: {
     type: DataTypes.STRING,
     allowNull: false
   }

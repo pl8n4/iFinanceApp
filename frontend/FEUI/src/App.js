@@ -13,7 +13,7 @@ function App() {
     name: '',
     userName: '',
     password: '1111',
-    role: 'user',
+    role: 'non-admin',
     email: '',
     address: ''
   });
@@ -64,6 +64,7 @@ function App() {
 
   const handleCreateUser = async (e) => {
     e.preventDefault();
+    
     try {
       const res = await fetch('/api/users', {
         method: 'POST',
@@ -73,9 +74,12 @@ function App() {
         },
         body: JSON.stringify(newUser)
       });
-      if (!res.ok) throw new Error('Failed to create user');
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Failed to create user');
+      }
       alert('User created successfully!');
-      setNewUser({ name: '', userName: '', password: '1111', role: 'user', email: '', address: '' });
+      setNewUser({ name: '', userName: '', password: '1111', role: 'non-admin', email: '', address: '' });
     } catch (err) {
       alert(err.message);
     }
@@ -198,11 +202,11 @@ function App() {
                         value={newUser.role}
                         onChange={e => setNewUser({ ...newUser, role: e.target.value })}
                       >
-                        <option value="user">User</option>
+                        <option value="non-admin">User</option>
                         <option value="admin">Admin</option>
                       </select>
                     </div>
-                    {newUser.role === 'user' && (
+                    {newUser.role === 'non-admin' && (
                       <>
                         <div className="form-group">
                           <label htmlFor="newEmail">Email</label>
