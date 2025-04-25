@@ -7,7 +7,7 @@ const { verifyToken } = require('../middleware/authMiddleware'); // Assume auth 
 exports.getAll = async (req, res, next) => {
   try {
     const groups = await Group.findAll({
-      where: {NonAdminUserID: req.user.id}
+      where: {NonAdminUserId: req.user.id}
     });
     res.json(groups);
   } catch (err) {
@@ -65,7 +65,7 @@ exports.update = async (req, res, next) => {
 // Remove a group by its ID
 exports.remove = async (req, res, next) => {
   try {
-    const deleted = await Group.destroy({ where: { id: req.params.id, NonAdminUserID: req.user.id } });
+    const deleted = await Group.destroy({ where: { id: req.params.id, NonAdminUserId: req.user.id } });
     if (!deleted) return res.status(404).json({ message: 'Not found or not your group' });
     res.status(204).end();
   } catch (err) {
