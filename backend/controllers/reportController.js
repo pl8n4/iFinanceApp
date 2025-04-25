@@ -1,9 +1,10 @@
-const Transaction = require('../models/Transaction');
-const TransactionLine = require('../models/TransactionLine');
-const MasterAccount = require('../models/MasterAccount');
-const { Op } = require('sequelize');
+// reportController.js
 
-// Generate financial reports based on report type and criteria
+const Transaction       = require('../models/Transaction');
+const TransactionLine   = require('../models/TransactionLine');
+const MasterAccount     = require('../models/MasterAccount');
+const { Op }            = require('sequelize');
+
 exports.generateReport = async (req, res, next) => {
   try {
     const { reportType, startDate, endDate, accountFilter, asOfDate } = req.body;
@@ -16,59 +17,68 @@ exports.generateReport = async (req, res, next) => {
       return res.status(400).json({ message: 'Start date must be before end date' });
     }
 
-    // Fetch all master accounts
-    const accounts = await MasterAccount.findAll();
+    // 1) Fetch only this user's master accounts
+    const accounts = await MasterAccount.findAll({
+      where: { NonAdminUserId: req.user.id }
+    });
 
-    // Fetch transaction lines within the date range (if provided)
-    const whereClause = {};
+    // 2) Build transaction filter scoped to this user (plus date range)
+    const txWhere = { NonAdminUserId: req.user.id };
     if (startDate && endDate) {
-      whereClause.date = {
-        [Op.between]: [new Date(startDate), new Date(endDate)],
+      txWhere.date = {
+        [Op.between]: [new Date(startDate), new Date(endDate)]
       };
     }
 
+    // 3) Fetch this user's transactions + their lines (only on this user's accounts)
     const transactions = await Transaction.findAll({
-      where: whereClause,
+      where: txWhere,
       include: [
         {
           model: TransactionLine,
           as: 'lines',
-          include: [{ model: MasterAccount }],
-        },
-      ],
+          include: [
+            {
+              model: MasterAccount,
+              where: { NonAdminUserId: req.user.id }
+            }
+          ]
+        }
+      ]
     });
 
     let reportData;
 
-    // Helper to categorize accounts (simplified for this example)
+    // Helper to categorize accounts
     const categorizeAccount = (accountName) => {
-      if (accountName.toLowerCase().includes('asset')) return 'Assets';
-      if (accountName.toLowerCase().includes('liability')) return 'Liabilities';
-      if (accountName.toLowerCase().includes('equity')) return 'Equity';
-      if (accountName.toLowerCase().includes('revenue')) return 'Revenue';
-      if (accountName.toLowerCase().includes('expense')) return 'Expenses';
+      const lower = accountName.toLowerCase();
+      if (lower.includes('asset'))     return 'Assets';
+      if (lower.includes('liability')) return 'Liabilities';
+      if (lower.includes('equity'))    return 'Equity';
+      if (lower.includes('revenue'))   return 'Revenue';
+      if (lower.includes('expense'))   return 'Expenses';
       return 'Other';
     };
 
-    // Generate report based on type
     switch (reportType) {
       case 'Trial Balance': {
-        // Aggregate debits and credits per account
         const trialBalance = accounts.reduce((acc, account) => {
-          let debitTotal = 0;
-          let creditTotal = 0;
+          let debitTotal = 0, creditTotal = 0;
 
-          transactions.forEach((tx) => {
-            tx.lines.forEach((line) => {
+          transactions.forEach(tx =>
+            tx.lines.forEach(line => {
               if (line.MasterAccountId === account.id) {
-                debitTotal += parseFloat(line.debitedAmount) || 0;
+                debitTotal  += parseFloat(line.debitedAmount)  || 0;
                 creditTotal += parseFloat(line.creditedAmount) || 0;
               }
-            });
-          });
+            })
+          );
 
-          // Apply account filter if provided
-          if (accountFilter && !categorizeAccount(account.name).toLowerCase().includes(accountFilter.toLowerCase())) {
+          if (accountFilter &&
+              !categorizeAccount(account.name)
+                .toLowerCase()
+                .includes(accountFilter.toLowerCase())
+          ) {
             return acc;
           }
 
@@ -80,7 +90,6 @@ exports.generateReport = async (req, res, next) => {
               credit: creditTotal,
             });
           }
-
           return acc;
         }, []);
 
@@ -89,48 +98,37 @@ exports.generateReport = async (req, res, next) => {
           period: startDate && endDate ? `${startDate} to ${endDate}` : 'All Time',
           data: trialBalance,
           totals: {
-            debit: trialBalance.reduce((sum, entry) => sum + entry.debit, 0),
-            credit: trialBalance.reduce((sum, entry) => sum + entry.credit, 0),
+            debit:  trialBalance.reduce((sum, e) => sum + e.debit,  0),
+            credit: trialBalance.reduce((sum, e) => sum + e.credit, 0),
           },
         };
         break;
       }
 
       case 'Balance Sheet': {
-        // Use asOfDate or endDate for Balance Sheet
         const cutoffDate = asOfDate || endDate;
         if (!cutoffDate) {
           return res.status(400).json({ message: 'As-of date or end date is required for Balance Sheet' });
         }
 
-        const balanceSheet = {
-          Assets: [],
-          Liabilities: [],
-          Equity: [],
-        };
-
-        accounts.forEach((account) => {
+        const balanceSheet = { Assets: [], Liabilities: [], Equity: [] };
+        accounts.forEach(account => {
           let balance = 0;
-
-          transactions.forEach((tx) => {
+          transactions.forEach(tx => {
             if (new Date(tx.date) <= new Date(cutoffDate)) {
-              tx.lines.forEach((line) => {
+              tx.lines.forEach(line => {
                 if (line.MasterAccountId === account.id) {
-                  balance += (parseFloat(line.debitedAmount) || 0) - (parseFloat(line.creditedAmount) || 0);
+                  balance += (parseFloat(line.debitedAmount)  || 0)
+                           - (parseFloat(line.creditedAmount) || 0);
                 }
               });
             }
           });
-
           const category = categorizeAccount(account.name);
           if (balance !== 0) {
-            if (category === 'Assets') {
-              balanceSheet.Assets.push({ accountName: account.name, balance });
-            } else if (category === 'Liabilities') {
-              balanceSheet.Liabilities.push({ accountName: account.name, balance });
-            } else if (category === 'Equity') {
-              balanceSheet.Equity.push({ accountName: account.name, balance });
-            }
+            if (category === 'Assets')     balanceSheet.Assets.push({ accountName: account.name, balance });
+            if (category === 'Liabilities')balanceSheet.Liabilities.push({ accountName: account.name, balance });
+            if (category === 'Equity')     balanceSheet.Equity.push({ accountName: account.name, balance });
           }
         });
 
@@ -139,40 +137,35 @@ exports.generateReport = async (req, res, next) => {
           asOf: cutoffDate,
           data: balanceSheet,
           totals: {
-            assets: balanceSheet.Assets.reduce((sum, entry) => sum + entry.balance, 0),
-            liabilities: balanceSheet.Liabilities.reduce((sum, entry) => sum + entry.balance, 0),
-            equity: balanceSheet.Equity.reduce((sum, entry) => sum + entry.balance, 0),
+            assets:     balanceSheet.Assets.reduce((sum, e) => sum + e.balance, 0),
+            liabilities:balanceSheet.Liabilities.reduce((sum, e) => sum + e.balance, 0),
+            equity:     balanceSheet.Equity.reduce((sum, e) => sum + e.balance, 0),
           },
         };
         break;
       }
 
       case 'Profit and Loss Statement': {
-        const profitLoss = {
-          Revenue: [],
-          Expenses: [],
-        };
-
-        accounts.forEach((account) => {
+        const profitLoss = { Revenue: [], Expenses: [] };
+        accounts.forEach(account => {
           let amount = 0;
-
-          transactions.forEach((tx) => {
-            if (startDate && endDate && new Date(tx.date) >= new Date(startDate) && new Date(tx.date) <= new Date(endDate)) {
-              tx.lines.forEach((line) => {
+          transactions.forEach(tx => {
+            if (startDate && endDate &&
+                new Date(tx.date) >= new Date(startDate) &&
+                new Date(tx.date) <= new Date(endDate)
+            ) {
+              tx.lines.forEach(line => {
                 if (line.MasterAccountId === account.id) {
-                  amount += (parseFloat(line.creditedAmount) || 0) - (parseFloat(line.debitedAmount) || 0);
+                  amount += (parseFloat(line.creditedAmount) || 0)
+                          - (parseFloat(line.debitedAmount)  || 0);
                 }
               });
             }
           });
-
           const category = categorizeAccount(account.name);
           if (amount !== 0) {
-            if (category === 'Revenue') {
-              profitLoss.Revenue.push({ accountName: account.name, amount });
-            } else if (category === 'Expenses') {
-              profitLoss.Expenses.push({ accountName: account.name, amount });
-            }
+            if (category === 'Revenue') profitLoss.Revenue.push({ accountName: account.name, amount });
+            if (category === 'Expenses')profitLoss.Expenses.push({ accountName: account.name, amount });
           }
         });
 
@@ -181,35 +174,35 @@ exports.generateReport = async (req, res, next) => {
           period: `${startDate} to ${endDate}`,
           data: profitLoss,
           totals: {
-            revenue: profitLoss.Revenue.reduce((sum, entry) => sum + entry.amount, 0),
-            expenses: profitLoss.Expenses.reduce((sum, entry) => sum + entry.amount, 0),
-            netIncome: profitLoss.Revenue.reduce((sum, entry) => sum + entry.amount, 0) -
-                       profitLoss.Expenses.reduce((sum, entry) => sum + entry.amount, 0),
+            revenue:  profitLoss.Revenue.reduce((sum, e) => sum + e.amount,  0),
+            expenses: profitLoss.Expenses.reduce((sum, e) => sum + e.amount, 0),
+            netIncome: profitLoss.Revenue.reduce((sum, e) => sum + e.amount, 0)
+                     - profitLoss.Expenses.reduce((sum, e) => sum + e.amount, 0),
           },
         };
         break;
       }
 
       case 'Cash Flow Statement': {
-        // Simplified cash flow (operating activities only for this example)
-        const cashFlow = {
-          OperatingActivities: [],
-        };
-
-        accounts.forEach((account) => {
-          if (categorizeAccount(account.name) === 'Assets' && account.name.toLowerCase().includes('cash')) {
+        const cashFlow = { OperatingActivities: [] };
+        accounts.forEach(account => {
+          if (categorizeAccount(account.name) === 'Assets' &&
+              account.name.toLowerCase().includes('cash')
+          ) {
             let cashChange = 0;
-
-            transactions.forEach((tx) => {
-              if (startDate && endDate && new Date(tx.date) >= new Date(startDate) && new Date(tx.date) <= new Date(endDate)) {
-                tx.lines.forEach((line) => {
+            transactions.forEach(tx => {
+              if (startDate && endDate &&
+                  new Date(tx.date) >= new Date(startDate) &&
+                  new Date(tx.date) <= new Date(endDate)
+              ) {
+                tx.lines.forEach(line => {
                   if (line.MasterAccountId === account.id) {
-                    cashChange += (parseFloat(line.debitedAmount) || 0) - (parseFloat(line.creditedAmount) || 0);
+                    cashChange += (parseFloat(line.debitedAmount)  || 0)
+                                - (parseFloat(line.creditedAmount) || 0);
                   }
                 });
               }
             });
-
             if (cashChange !== 0) {
               cashFlow.OperatingActivities.push({ accountName: account.name, cashChange });
             }
@@ -221,7 +214,7 @@ exports.generateReport = async (req, res, next) => {
           period: `${startDate} to ${endDate}`,
           data: cashFlow,
           totals: {
-            netCashFlow: cashFlow.OperatingActivities.reduce((sum, entry) => sum + entry.cashChange, 0),
+            netCashFlow: cashFlow.OperatingActivities.reduce((sum, e) => sum + e.cashChange, 0),
           },
         };
         break;
