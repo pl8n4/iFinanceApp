@@ -105,3 +105,49 @@ button:hover {
   font-weight: bold;
   margin-bottom: 1rem;
 }
+
+.tabs {
+  margin-bottom: 1rem;
+}
+
+.tabs button {
+  background-color: #f8f9fa;
+  color: #333;
+  border: 1px solid #ccc;
+  padding: 0.5rem 1rem;
+  margin-right: 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.tabs button:hover {
+  background-color: #e9ecef;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+th, td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  background-color: #f8f9fa;
+  font-weight: bold;
+}
+
+.action-button {
+  background-color: #dc3545;
+  width: auto;
+  padding: 0.25rem 0.75rem;
+  margin-right: 0.5rem;
+}
+
+.action-button:hover {
+  background-color: #c82333;
+}

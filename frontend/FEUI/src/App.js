@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './App.css';
+import GroupManager from './GroupManager';
 
 function App() {
   const [token, setToken] = useState('');
@@ -10,15 +11,16 @@ function App() {
     name: '',
     userName: '',
     password: '1111',
-    role: 'non-admin',       // <-- must match your controller  
+    role: 'user', // Changed from 'non-admin' to 'user' to match database role
     email: '',
     address: ''
   });
-  
+  const [tab, setTab] = useState(null);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('/api/auth/login', { // used relative path so that 'setupProxy.js' takes over instead of hardcoding
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)
@@ -59,31 +61,17 @@ function App() {
   const handleCreateUser = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('/api/users', { // used relative path so that 'setupProxy.js' takes over instead of hardcoding
+      const res = await fetch('/api/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          name:     newUser.name,
-          userName: newUser.userName,
-          password: newUser.password,
-          role:     newUser.role,
-          email:    newUser.email,
-          address:  newUser.address
-        })
+        body: JSON.stringify(newUser)
       });
       if (!res.ok) throw new Error('Failed to create user');
       alert('User created successfully!');
-      setNewUser({ 
-        name: '', 
-        userName: '', 
-        password: '1111', 
-        role: 'user', 
-        email: '', 
-        address: '' 
-      });
+      setNewUser({ name: '', userName: '', password: '1111', role: 'user', email: '', address: '' });
     } catch (err) {
       alert(err.message);
     }
@@ -197,11 +185,11 @@ function App() {
                 value={newUser.role}
                 onChange={e => setNewUser({ ...newUser, role: e.target.value })}
               >
-                <option value="non-admin">User</option>
+                <option value="user">User</option>
                 <option value="admin">Admin</option>
               </select>
             </div>
-            {newUser.role === 'non-admin' && (
+            {newUser.role === 'user' && (
               <>
                 <div className="form-group">
                   <label htmlFor="newEmail">Email</label>
@@ -226,6 +214,15 @@ function App() {
             <button type="submit">Create User</button>
           </form>
         </div>
+      )}
+
+      {currentUser.role === 'user' && (
+        <>
+          <div className="tabs">
+            <button onClick={() => setTab('groups')}>Manage Groups</button>
+          </div>
+          {tab === 'groups' && <GroupManager token={token} />}
+        </>
       )}
     </div>
   );

@@ -1,4 +1,4 @@
-// models
+// Models
 require('./models/BaseUser');
 require('./models/UserPassword');
 require('./models/Administrator');
@@ -23,25 +23,42 @@ const cors = require('cors');
 const sequelize = require('./db');
 
 const app = express();
-app.use(cors());
+
+// Middleware
+app.use(cors({
+  origin: 'http://localhost:3000', // Restrict to frontend origin
+  credentials: true
+}));
 app.use(express.json());
 
 // Basic route to test server
 app.get('/', (req, res) => {
-    res.send('iFinance backend is up and running!');
+  res.send('iFinance backend is up and running!');
+});
+
+// Routes
+app.use('/api/categories', categoryRouter);
+app.use('/api/groups', groupRouter);
+app.use('/api/master-accounts', masterAccountRouter);
+app.use('/api/transactions', transactionRouter);
+app.use('/api/transaction-lines', transactionLineRouter);
+app.use('/api/users', userRouter);
+app.use('/api/auth', authRouter);
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Server Error:', err);
+  res.status(500).json({ message: 'Internal server error' });
 });
 
 // Sets up the port and starts the server
-// Establishes connection to the database
 const PORT = process.env.PORT || 5001;
 async function start() {
-  try{
-    await sequelize.authenticate()
-    console.log('db connected')
-    // Syncs all the models from ./models to the database. 
-    // If the models from the db dont match the ones in ./models, it will alter the db to match the models. 
-    await sequelize.sync({alter: true})
-    console.log('models synced')
+  try {
+    await sequelize.authenticate();
+    console.log('db connected');
+    await sequelize.sync({ alter: true });
+    console.log('models synced');
     app.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
     });
@@ -49,14 +66,5 @@ async function start() {
     console.error('Unable to connect to the database:', error);
   }
 }
-
-// These are all the routes
-app.use('/api/categories', categoryRouter);
-app.use('/api/groups', groupRouter);
-app.use('/api/master-accounts', masterAccountRouter);
-app.use('/api/transactions', transactionRouter);
-app.use('/api/transaction-lines', transactionLineRouter);
-app.use('/api/users', userRouter);
-app.use('/api/auth', authRouter)
 
 start();
