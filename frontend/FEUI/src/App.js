@@ -4,6 +4,7 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 import GroupManager from './GroupManager';
 import GenerateReports from './GenerateReports';
 import UserManagement from './UserManagement';
+import MasterAccountManager from './MasterAccountManager'; // New import
 
 function App() {
   const [token, setToken] = useState('');
@@ -24,7 +25,7 @@ function App() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch('http://localhost:5001/api/auth/login', { // Updated URL to match backend port
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)
@@ -41,7 +42,7 @@ function App() {
   const handleChangePassword = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('/api/auth/change-password', {
+      const res = await fetch('http://localhost:5001/api/auth/change-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -57,6 +58,7 @@ function App() {
       setForm({ username: '', password: '' });
       setNewPassword('');
       setCurrentUser(null);
+      setToken('');
     } catch (err) {
       alert('Error changing password');
     }
@@ -65,7 +67,7 @@ function App() {
   const handleCreateUser = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('/api/users', {
+      const res = await fetch('http://localhost:5001/api/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -90,7 +92,6 @@ function App() {
         path="/"
         element={
           !currentUser ? (
-            // ... (login form remains the same)
             <div className="login-container">
               <div className="login-box">
                 <h1>iFinanceApp Login</h1>
@@ -165,7 +166,6 @@ function App() {
                 <div className="admin-section">
                   <h2>Create New User</h2>
                   <form onSubmit={handleCreateUser}>
-                    {/* ... (rest of the create user form remains the same) */}
                     <div className="form-group">
                       <label htmlFor="newName">Name</label>
                       <input
@@ -231,10 +231,8 @@ function App() {
                     )}
                     <button type="submit">Create User</button>
                   </form>
-                  {/* <mark> START: Link to User Management page </mark> */}
                   <h2>User Administration</h2>
                   <button onClick={() => navigate('/users')}>Manage Existing Users</button>
-                  {/* <mark> END: Link to User Management page </mark> */}
                 </div>
               )}
 
@@ -242,6 +240,7 @@ function App() {
                 <>
                   <div className="tabs">
                     <button onClick={() => navigate('/groupmanager')}>Manage Groups</button>
+                    <button onClick={() => navigate('/chartofaccounts')}>Manage Master Accounts</button>
                     <button onClick={() => navigate('/generatereports')}>Generate Reports</button>
                   </div>
                 </>
@@ -251,10 +250,9 @@ function App() {
         }
       />
       <Route path="/groupmanager" element={<GroupManager token={token} currentUser={currentUser} />} />
+      <Route path="/chartofaccounts" element={<MasterAccountManager token={token} currentUser={currentUser} />} />
       <Route path="/generatereports" element={<GenerateReports />} />
-      {/* <mark> START: New route for User Management </mark> */}
       <Route path="/users" element={<UserManagement token={token} />} />
-      {/* <mark> END: New route for User Management </mark> */}
     </Routes>
   );
 }
